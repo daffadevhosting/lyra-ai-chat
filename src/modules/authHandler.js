@@ -4,16 +4,18 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCLqRflnb2__7D2QyEDsKE4eX42xi7mPTY",
-  authDomain: "as-syariahputra.firebaseapp.com",
-  projectId: "as-syariahputra",
-  appId: "1:623446867158:web:fd4f2d077059589b1d5d77"
+  apiKey: "AIzaSyBYyqPWnDD8QLFka3QQ5tbhTsovxX4XePs",
+  authDomain: "lyra-ai-olshop.firebaseapp.com",
+  projectId: "lyra-ai-olshop",
+  appId: "1:660548874119:web:e4655c72cac3012afead22"
 };
 
 let auth;
 let currentUser = null;
+let authInitialized = false;
 
 export function initAuth() {
+  if (authInitialized) return;
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   onAuthStateChanged(auth, (user) => {
@@ -22,6 +24,7 @@ export function initAuth() {
       window._onLoginStateChanged(user);
     }
   });
+  authInitialized = true;
 }
 
 export function login() {
@@ -31,10 +34,22 @@ export function login() {
   });
 }
 
+export function logout() {
+  if (!auth) return;
+  return auth.signOut().then(() => {
+    console.log('✅ Logout sukses');
+  }).catch(err => {
+    console.error('❌ Logout gagal:', err);
+  });
+}
+
 export function getCurrentUID() {
   return currentUser?.uid ?? null;
 }
 
 export function onLoginStateChanged(callback) {
   window._onLoginStateChanged = callback;
+  if (typeof currentUser !== 'undefined') {
+    callback(currentUser);
+  }
 }

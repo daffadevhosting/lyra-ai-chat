@@ -1,27 +1,51 @@
+// src/main.js
 import './style.css';
 import ChatTelegram from './pages/ChatTelegram';
+import AdminLogin, { initAdminLoginPage } from './pages/AdminLogin';
+import AdminPanel, { initAdminPanel } from './pages/AdminPanel';
+import { onLoginStateChanged } from './modules/adminAuth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getApp } from 'firebase/app';
 
-document.querySelector('#app').innerHTML = ChatTelegram();
+const db = getFirestore(getApp());
+const app = document.querySelector('#app');
+const route = window.location.pathname;
 
-// TUNDA sampai render selesai
-setTimeout(() => {
-  const sendBtn = document.getElementById('sendBtn');
-  const input = document.getElementById('chatInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const modalLoginBtn = document.getElementById('modalLoginBtn');
+let isProcessing = false;
 
-  sendBtn?.addEventListener('click', () => {
-    const text = input.value.trim();
-    if (!text) return;
+onLoginStateChanged(async (user) => {
+  if (isProcessing) return;
+  isProcessing = true;
 
-    // ... lanjut logika kirim chat
-  });
+  if (route === '/admin') {
+    if (user) {
+      const docRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists() && snap.data().isAdmin === true) {
+        app.innerHTML = AdminPanel();
+        requestAnimationFrame(initAdminPanel);
+      } else {
+        window.location.href = '/';
+      }
+    } else {
+      window.location.href = '/login';
+    }
+  } else if (route === '/login') {
+    if (user) {
+      const docRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(docRef);
+      if (snap.exists() && snap.data().isAdmin === true) {
+        window.location.href = '/admin';
+      } else {
+        window.location.href = '/';
+      }
+    } else {
+      app.innerHTML = AdminLogin();
+      requestAnimationFrame(initAdminLoginPage);
+    }
+  } else {
+    app.innerHTML = ChatTelegram();
+  }
 
-  loginBtn?.addEventListener('click', () => {
-    import('./modules/authHandler.js').then(mod => mod.login());
-  });
-
-  modalLoginBtn?.addEventListener('click', () => {
-    import('./modules/authHandler.js').then(mod => mod.login());
-  });
-}, 50); // delay kecil biar HTML kebentuk
+  isProcessing = false;
+});
