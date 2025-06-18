@@ -13,8 +13,8 @@ export function appendMessage({ sender, text, replyTo = null, product = null }) 
 const bubble = document.createElement('div');
 bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line ${
   sender === 'user'
-    ? 'bg-purple-600 text-white self-end'
-    : 'bg-gray-700 text-white self-start'
+    ? 'bg-purple-600 text-white self-end rounded-br-none'
+    : 'bg-gray-700 text-white self-start rounded-bl-none'
 }`;
 
 bubble.textContent = text;
@@ -23,7 +23,7 @@ time.className = "text-xs text-gray-400 mt-1 px-1";
 time.textContent = formatTime();
 
 div.appendChild(bubble);
-div.appendChild(time); // taruh jam di luar bubble
+div.appendChild(time);
 
 
   if (product) {

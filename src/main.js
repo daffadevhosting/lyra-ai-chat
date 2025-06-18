@@ -1,3 +1,4 @@
+// src/main.js
 import './style.css';
 import ChatTelegram from './pages/ChatTelegram';
 import AdminLogin, { initAdminLoginPage } from './pages/AdminLogin';
@@ -5,9 +6,27 @@ import AdminPanel, { initAdminPanel } from './pages/AdminPanel';
 
 const app = document.querySelector('#app');
 
+const renderChatIfLoggedIn = async () => {
+  const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+  const auth = getAuth();
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
+      app.innerHTML = ChatTelegram(name);
+      setTimeout(() => {
+        const event = new CustomEvent('user-login', { detail: { name } });
+        window.dispatchEvent(event);
+      }, 50); // Kirim nama ke ChatTelegram
+    } else {
+      app.innerHTML = ChatTelegram();
+    }
+  });
+};
+
 const routes = {
   '/': () => {
-    app.innerHTML = ChatTelegram();
+    renderChatIfLoggedIn();
   },
   '/login': () => {
     app.innerHTML = AdminLogin();
@@ -20,7 +39,6 @@ const routes = {
     const auth = getAuth();
     const db = getFirestore();
 
-    // tampilkan dulu loading (opsional)
     app.innerHTML = `<div class="text-white p-10 text-center">🔐 Mengecek akses admin...</div>`;
 
     onAuthStateChanged(auth, async (user) => {

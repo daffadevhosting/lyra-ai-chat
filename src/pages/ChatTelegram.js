@@ -1,10 +1,10 @@
-import { detectIntentAndRespond, PRODUCT_LIST } from '../modules/intentHandler.js';
-import { appendMessage,
-  showTypingBubble,
-  removeTypingBubble } from '../modules/chatRenderer.js';
-import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
-import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
-import { logout } from '../modules/authHandler.js';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+
+import { detectIntentAndRespond, PRODUCT_LIST } from '../modules/intentHandler';
+import { appendMessage, showTypingBubble, removeTypingBubble } from '../modules/chatRenderer';
+import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler';
+import { showLimitModal, hideLimitModal } from '../modules/limitModal';
+import { logout } from '../modules/authHandler';
 
 export default function ChatTelegram() {
   setTimeout(() => {
@@ -16,17 +16,27 @@ export default function ChatTelegram() {
     const sidebarBtn = document.getElementById('sidebarBtn');
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarList = document.querySelector('#sidebar .space-y-2');
 
     initAuth();
     onLoginStateChanged((user) => {
       if (user) {
-    const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
-        loginBtn.textContent = `Halo, ${name}`;
-        loginBtn.disabled = true;
+        if (loginBtn) {
+          const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
+          loginBtn.textContent = `Halo, ${name}`;
+          loginBtn.disabled = true;
+        }
         logoutBtn?.classList.remove('hidden');
         hideLimitModal();
       } else {
-      logoutBtn?.classList.add('hidden');
+        logoutBtn?.classList.add('hidden');
+      }
+    });
+
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn?.click();
       }
     });
 
@@ -61,17 +71,14 @@ export default function ChatTelegram() {
       }
     });
 
-    setTimeout(() => {
-      logoutBtn?.addEventListener('click', async () => {
-        await logout();
-        window.location.href = '/';
-      });
-    }, 50);
+    logoutBtn?.addEventListener('click', async () => {
+      await logout();
+      window.location.href = '/';
+    });
 
     loginBtn?.addEventListener('click', login);
     modalLoginBtn?.addEventListener('click', login);
 
-    // Sidebar toggle logic for mobile
     sidebarBtn?.addEventListener('click', () => {
       sidebar.classList.remove('-translate-x-full');
       sidebarOverlay.classList.remove('hidden');
@@ -80,6 +87,19 @@ export default function ChatTelegram() {
       sidebar.classList.add('-translate-x-full');
       sidebarOverlay.classList.add('hidden');
     });
+
+    // 🔁 Tampilkan produk di sidebar setelah render
+    if (sidebarList) {
+      const db = getFirestore();
+      getDocs(collection(db, 'products')).then(snapshot => {
+        const items = [];
+        snapshot.forEach(doc => {
+          const p = doc.data();
+          items.push(renderProductItem(p));
+        });
+        sidebarList.innerHTML = items.join('');
+      });
+    }
   }, 50);
 
   return `
@@ -89,10 +109,8 @@ export default function ChatTelegram() {
       <!-- Sidebar -->
       <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
         <h2 class="text-xl font-bold mb-4">🛍️ Produk</h2>
-        <div class="space-y-2">
-          ${renderProductItem("Keripik Lada Hitam", "Rp200.000")}
-          ${renderProductItem("Sambal Kering Gurih", "Rp15.000")}
-        </div>
+        <div class="border-t border-gray-700 pt-4"></div>
+        <div class="space-y-2"></div>
         <div class="relative bottom-0 left-0">
         <div class="mt-6 border-t border-gray-700 pt-4">
           <button id="logoutUserBtn" class="cursor-pointer text-sm text-red-400 hover:underline">Logout</button>
@@ -126,11 +144,7 @@ export default function ChatTelegram() {
         </div>
 
         <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b]">
-          <input
-            id="chatInput"
-            placeholder="Ketik sesuatu..."
-            class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"
-          />
+        <textarea id="chatInput" rows="1" placeholder="Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></textarea>
           <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-3 py-3 rounded-full">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12l16-6m0 0l-6 16m6-16L4 12" />
@@ -143,24 +157,27 @@ export default function ChatTelegram() {
         <div class="bg-[#2a2c3b] text-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg border border-purple-500">
           <h3 class="text-lg font-bold mb-2">Maaf, kamu sudah mencapai batas chat gratis.</h3>
           <p class="mb-4">Yuk login untuk akses lebih lanjut!</p>
-          <button id="modalLoginBtn" class="bg-purple-600 px-4 py-2 rounded-full">Login dengan Google</button>
+          <button id="modalLoginBtn" class="bg-purple-600 px-4 py-2 cursor-pointer rounded-full">Login dengan Google</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function renderProductItem(name, price) {
+function renderProductItem(product) {
   return `
-    <div class="bg-[#383a4d] p-3 rounded-lg hover:bg-[#4a4d64] cursor-pointer transition">
-      <div class="font-semibold">${name}</div>
-      <div class="text-sm text-gray-300">${price}</div>
+    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer">
+      <img src="${product.img}" alt="${product.name}" class="w-10 h-10 rounded-full object-cover border border-gray-500" />
+      <div>
+        <div class="font-medium">${product.name}</div>
+        <div class="text-sm text-gray-400">${product.price}</div>
+      </div>
     </div>
   `;
 }
 
 let chatCount = 0;
-const LIMIT = 3;
+const LIMIT = 10;
 
 function showTypingHeader() {
   const el = document.getElementById('typingStatus');
@@ -192,8 +209,8 @@ async function handleRequest(prompt) {
       return;
     }
 
-  removeTypingBubble();
-  hideTypingHeader();
+    removeTypingBubble();
+    hideTypingHeader();
     appendMessage({ sender: 'lyra', text: data.reply, replyTo: prompt });
   } catch (err) {
     console.error('❌ Gagal minta balasan:', err);
@@ -202,8 +219,3 @@ async function handleRequest(prompt) {
     appendMessage({ sender: 'lyra', text: '😵 LYRA lagi error. Coba lagi nanti ya.' });
   }
 }
-
-document.getElementById('logoutUserBtn')?.addEventListener('click', async () => {
-  await logout();
-  window.location.href = '/';
-});
