@@ -25,7 +25,7 @@ export default function AdminPanel() {
         <!-- Product List -->
         <div class="w-full">
           <h2 class="text-xl font-semibold mb-4">📋 Daftar Produk</h2>
-          <div id="productList" class="grid gap-4"></div>
+          <div id="productList" class="grid grid-cols-2 gap-4"></div>
         </div>
       </div>
     </div>

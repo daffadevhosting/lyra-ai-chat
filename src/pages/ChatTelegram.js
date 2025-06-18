@@ -1,5 +1,5 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { createIcons, icons } from 'lucide';
+
 import { detectIntentAndRespond } from '../modules/intentHandler.js';
 import { appendMessage,
   showTypingBubble,
@@ -8,11 +8,16 @@ import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { logout } from '../modules/authHandler.js';
 
-createIcons({ icons });
 let PRODUCT_LIST = [];
 
+async function loadProductList() {
+  const db = getFirestore();
+  const snapshot = await getDocs(collection(db, 'products'));
+  PRODUCT_LIST = snapshot.docs.map(doc => doc.data());
+}
+
 export default function ChatTelegram() {
-  setTimeout(() => {
+  setTimeout(async () => {
     const sendBtn = document.getElementById('sendBtn');
     const input = document.getElementById('chatInput');
     const loginBtn = document.getElementById('loginBtn');
@@ -25,6 +30,7 @@ export default function ChatTelegram() {
 
     initAuth();
     const db = getFirestore();
+    await loadProductList();
 
     onLoginStateChanged((user) => {
       if (user && loginBtn) {
@@ -93,15 +99,8 @@ export default function ChatTelegram() {
       sidebarOverlay.classList.add('hidden');
     });
 
-    // Ambil produk dan render ke sidebar
     if (sidebarProduct) {
-      getDocs(collection(db, 'products')).then(snapshot => {
-        const items = [];
-        PRODUCT_LIST = [];
-        snapshot.forEach(doc => {
-          const p = doc.data();
-          PRODUCT_LIST.push(p);
-          items.push(`
+      const items = PRODUCT_LIST.map(p => `
             <div class="product-item flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer" data-slug="${p.slug}">
               <img src="${p.img}" alt="${p.name}" class="w-10 h-10 rounded-full object-cover border border-gray-500" />
               <div style="width: -webkit-fill-available;">
@@ -112,10 +111,8 @@ export default function ChatTelegram() {
                 <div class="text-sm text-gray-400">Rp.${p.price}</div>
               </div>
             </div>
-          `);
-        });
-        sidebarProduct.innerHTML = items.join('');
-      });
+      `);
+      sidebarProduct.innerHTML = items.join('');
 
       sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
@@ -130,16 +127,20 @@ export default function ChatTelegram() {
         showTypingBubble();
         showTypingHeader();
 
+        // Collapse sidebar (mobile)
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
+
         setTimeout(() => {
           removeTypingBubble();
           hideTypingHeader();
           appendMessage({
             sender: 'lyra',
-            text: `Wah, ${product.name} ini sih salah satu favorit nih! 😍`,
+            text: `Wah, ${product.name} ini salah satu favorit nih! 😍`,
             product,
             replyTo: msg
           });
-        }, 1500);
+        }, 1200);
       });
     }
   }, 50);
@@ -161,7 +162,7 @@ export default function ChatTelegram() {
       </div>
       <!-- Main content -->
       <div class="flex-1 flex flex-col">
-        <div class="p-3 border-b border-gray-700 bg-[#262838] flex justify-between items-center fixed-top">
+        <div class="p-3 border-b border-gray-700 bg-[#262838] flex justify-between items-center">
           <div class="flex items-center gap-2">
             <!-- Sidebar open button for mobile -->
             <button id="sidebarBtn" class="md:hidden cursor-pointer mr-2 focus:outline-none">
@@ -181,9 +182,9 @@ export default function ChatTelegram() {
           </button>
         </div>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto md:pt-4 pt-20 md:pb-4 pb-20 p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
+        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
 
-        <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b] fixed-bottom">
+        <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b]">
         <textarea id="chatInput" rows="1" placeholder="Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></textarea>
           <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-3 py-3 rounded-full">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
