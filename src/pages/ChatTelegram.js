@@ -11,6 +11,9 @@ export default function ChatTelegram() {
     const input = document.getElementById('chatInput');
     const loginBtn = document.getElementById('loginBtn');
     const modalLoginBtn = document.getElementById('modalLoginBtn');
+    const sidebarBtn = document.getElementById('sidebarBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
 
     initAuth();
     onLoginStateChanged((user) => {
@@ -55,26 +58,44 @@ export default function ChatTelegram() {
 
     loginBtn?.addEventListener('click', login);
     modalLoginBtn?.addEventListener('click', login);
+
+    // Sidebar toggle logic for mobile
+    sidebarBtn?.addEventListener('click', () => {
+      sidebar.classList.remove('-translate-x-full');
+      sidebarOverlay.classList.remove('hidden');
+    });
+    sidebarOverlay?.addEventListener('click', () => {
+      sidebar.classList.add('-translate-x-full');
+      sidebarOverlay.classList.add('hidden');
+    });
   }, 50);
 
   return `
-    <div class="flex h-screen bg-[#1d1f2b] text-white font-sans">
-      <div class="w-1/3 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700">
+    <div class="flex h-screen bg-[#1d1f2b] text-white font-sans relative overflow-hidden">
+      <!-- Sidebar overlay for mobile -->
+      <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
+      <!-- Sidebar -->
+      <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-200 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
         <h2 class="text-xl font-bold mb-4">🛍️ Produk</h2>
         <div class="space-y-2">
           ${renderProductItem("Keripik Lada Hitam", "Rp200.000")}
           ${renderProductItem("Sambal Kering Gurih", "Rp15.000")}
         </div>
       </div>
+      <!-- Main content -->
       <div class="flex-1 flex flex-col">
         <div class="p-4 border-b border-gray-700 bg-[#262838] flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <img src="/assets/lyra-avatar.png" class="w-8 h-8 rounded-full border border-purple-600" />
-        <div>
-          <div class="font-semibold">LYRA</div>
-          <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
-        </div>
-      </div>
+          <div class="flex items-center gap-2">
+            <!-- Sidebar open button for mobile -->
+            <button id="sidebarBtn" class="md:hidden mr-2 focus:outline-none">
+              <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+            <img src="/assets/lyra-avatar.png" class="w-8 h-8 rounded-full border border-purple-600" />
+            <div>
+              <div class="font-semibold">LYRA</div>
+              <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
+            </div>
+          </div>
           <button id="loginBtn" class="flex items-center gap-2 text-sm bg-purple-700 px-3 py-1 rounded">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 012 2v4m-6 6H9m6 0V9m0 6l3 3m-3-3l-3 3" />
@@ -83,7 +104,7 @@ export default function ChatTelegram() {
           </button>
         </div>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col scrollbar-none">
+        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none">
           <!-- Chat bubbles inserted here -->
         </div>
 
