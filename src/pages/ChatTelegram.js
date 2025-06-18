@@ -1,10 +1,14 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
-import { detectIntentAndRespond, PRODUCT_LIST } from '../modules/intentHandler';
-import { appendMessage, showTypingBubble, removeTypingBubble } from '../modules/chatRenderer';
-import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler';
-import { showLimitModal, hideLimitModal } from '../modules/limitModal';
-import { logout } from '../modules/authHandler';
+import { detectIntentAndRespond } from '../modules/intentHandler.js';
+import { appendMessage,
+  showTypingBubble,
+  removeTypingBubble } from '../modules/chatRenderer.js';
+import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
+import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
+import { logout } from '../modules/authHandler.js';
+
+let PRODUCT_LIST = [];
 
 export default function ChatTelegram() {
   setTimeout(() => {
@@ -16,16 +20,16 @@ export default function ChatTelegram() {
     const sidebarBtn = document.getElementById('sidebarBtn');
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const sidebarList = document.querySelector('#sidebar .space-y-2');
+    const sidebarProduct = document.getElementById('sidebarProduct');
 
     initAuth();
+    const db = getFirestore();
+
     onLoginStateChanged((user) => {
-      if (user) {
-        if (loginBtn) {
-          const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
-          loginBtn.textContent = `Halo, ${name}`;
-          loginBtn.disabled = true;
-        }
+      if (user && loginBtn) {
+        const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
+        loginBtn.textContent = `Halo, ${name}`;
+        loginBtn.disabled = true;
         logoutBtn?.classList.remove('hidden');
         hideLimitModal();
       } else {
@@ -67,7 +71,7 @@ export default function ChatTelegram() {
       } else if (result.intent === 'match') {
         appendMessage({ sender: 'lyra', text: result.label, product: result.product });
       } else {
-        handleRequest(text); // fallback ke GPT
+        handleRequest(text);
       }
     });
 
@@ -88,16 +92,53 @@ export default function ChatTelegram() {
       sidebarOverlay.classList.add('hidden');
     });
 
-    // 🔁 Tampilkan produk di sidebar setelah render
-    if (sidebarList) {
-      const db = getFirestore();
+    // Ambil produk dan render ke sidebar
+    if (sidebarProduct) {
       getDocs(collection(db, 'products')).then(snapshot => {
         const items = [];
+        PRODUCT_LIST = [];
         snapshot.forEach(doc => {
           const p = doc.data();
-          items.push(renderProductItem(p));
+          PRODUCT_LIST.push(p);
+          items.push(`
+            <div class="product-item flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer" data-slug="${p.slug}">
+              <img src="${p.img}" alt="${p.name}" class="w-10 h-10 rounded-full object-cover border border-gray-500" />
+              <div>
+                <div class="font-medium flex items-center gap-2">
+                  ${p.name}
+                  <span class="text-yellow-400 text-sm">⭐ ${p.rating ?? '0'}</span>
+                </div>
+                <div class="text-sm text-gray-400">${p.price}</div>
+              </div>
+            </div>
+          `);
         });
-        sidebarList.innerHTML = items.join('');
+        sidebarProduct.innerHTML = items.join('');
+      });
+
+      sidebarProduct.addEventListener('click', (e) => {
+        const target = e.target.closest('.product-item');
+        if (!target) return;
+        const slug = target.dataset.slug;
+        const product = PRODUCT_LIST.find(p => p.slug === slug);
+        if (!product) return console.warn('Produk tidak ditemukan:', slug);
+
+        const msg = `Ceritain dong soal ${product.name}`;
+        appendMessage({ sender: 'user', text: msg });
+
+        showTypingBubble();
+        showTypingHeader();
+
+        setTimeout(() => {
+          removeTypingBubble();
+          hideTypingHeader();
+          appendMessage({
+            sender: 'lyra',
+            text: `Wah, ${product.name} ini sih salah satu favorit nih! 😍`,
+            product,
+            replyTo: msg
+          });
+        }, 1500);
       });
     }
   }, 50);
@@ -110,9 +151,9 @@ export default function ChatTelegram() {
       <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
         <h2 class="text-xl font-bold mb-4">🛍️ Produk</h2>
         <div class="border-t border-gray-700 pt-4"></div>
-        <div class="space-y-2"></div>
+        <div id="sidebarProduct" class="space-y-2"></div>
         <div class="relative bottom-0 left-0">
-        <div class="mt-6 border-t border-gray-700 pt-4">
+        <div class="mt-6 pt-4">
           <button id="logoutUserBtn" class="cursor-pointer text-sm text-red-400 hover:underline">Logout</button>
           </div>
         </div>
@@ -164,18 +205,6 @@ export default function ChatTelegram() {
   `;
 }
 
-function renderProductItem(product) {
-  return `
-    <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer">
-      <img src="${product.img}" alt="${product.name}" class="w-10 h-10 rounded-full object-cover border border-gray-500" />
-      <div>
-        <div class="font-medium">${product.name}</div>
-        <div class="text-sm text-gray-400">${product.price}</div>
-      </div>
-    </div>
-  `;
-}
-
 let chatCount = 0;
 const LIMIT = 10;
 
@@ -219,3 +248,12 @@ async function handleRequest(prompt) {
     appendMessage({ sender: 'lyra', text: '😵 LYRA lagi error. Coba lagi nanti ya.' });
   }
 }
+
+window.askProduct = function (slug) {
+  const product = PRODUCT_LIST.find(p => p.slug === slug);
+  if (!product) return;
+
+  const pertanyaan = `Ceritain dong soal ${product.name}`;
+  appendMessage({ sender: 'user', text: pertanyaan });
+  appendMessage({ sender: 'lyra', product, text: `Wah, ${product.name} ini salah satu produk unggulan kami nih! 🤩` });
+};
