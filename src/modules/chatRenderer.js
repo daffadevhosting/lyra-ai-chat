@@ -1,0 +1,75 @@
+export function appendMessage({ sender, text, replyTo = null, product = null }) {
+  const chatBox = document.getElementById("chatBox");
+  const div = document.createElement("div");
+  div.className = `flex flex-col ${sender === 'user' ? 'items-end' : 'items-start'}`;
+
+  if (replyTo) {
+    const reply = document.createElement("div");
+    reply.className = `text-sm text-gray-400 mb-1 italic`;
+    reply.textContent = `➤ ${replyTo}`;
+    div.appendChild(reply);
+  }
+
+const bubble = document.createElement('div');
+bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line ${
+  sender === 'user'
+    ? 'bg-purple-600 text-white self-end'
+    : 'bg-gray-700 text-white self-start'
+}`;
+
+bubble.textContent = text;
+const time = document.createElement("div");
+time.className = "text-xs text-gray-400 mt-1 px-1";
+time.textContent = formatTime();
+
+div.appendChild(bubble);
+div.appendChild(time); // taruh jam di luar bubble
+
+
+  if (product) {
+    const card = document.createElement("div");
+    card.className = `mt-2 rounded-xl overflow-hidden bg-[#2e2e3e] border border-gray-600`;
+    card.innerHTML = `
+      <img src="${product.img}" class="w-full h-32 object-cover" />
+      <div class="p-3">
+        <div class="font-bold">${product.name}</div>
+        <div class="text-sm text-gray-300">${product.price}</div>
+        <a href="/produk/${product.slug}" class="text-sm mt-2 inline-block px-3 py-1 bg-green-500 text-white rounded-lg">Beli Sekarang</a>
+      </div>
+    `;
+    div.appendChild(card);
+  }
+
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function formatTime() {
+  const now = new Date();
+  return now.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function showTypingBubble() {
+  const chatBox = document.getElementById('chatBox');
+  if (!chatBox || document.getElementById('typingBubble')) return;
+
+  const typingDiv = document.createElement('div');
+  typingDiv.id = 'typingBubble';
+  typingDiv.className = 'self-start bg-gray-700 px-4 py-2 rounded-2xl max-w-max';
+
+  typingDiv.innerHTML = `
+    <div class="flex gap-1 typing-bubble">
+      <span></span><span></span><span></span>
+    </div>
+  `;
+
+  chatBox.appendChild(typingDiv);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+export function removeTypingBubble() {
+  document.getElementById('typingBubble')?.remove();
+}
