@@ -38,3 +38,18 @@
     transform: translateY(-6px);
   }
 }
+
+@media (max-width: 700px) {
+  .fixed-bottom {
+    position: fixed;
+    bottom: 0;
+    width: -webkit-fill-available;
+    left: 0;
+  }
+  .fixed-top {
+    position: fixed;
+    width: -webkit-fill-available;
+    top: 0;
+    left: 0;
+  }
+}

@@ -1,26 +1,11 @@
 // src/modules/intentHandler.js
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
-export const PRODUCT_LIST = [
-  {
-    name: "Keripik Lada Hitam",
-    price: "Rp200.000",
-    img: "/assets/keripik.jpg",
-    slug: "keripik-lada-hitam",
-    rating: 4.8,
-    sold: 120,
-    keywords: ["keripik", "lada", "camilan"],
-  },
-  {
-    name: "Sambal Kering Gurih",
-    price: "Rp15.000",
-    img: "/assets/sambal.jpg",
-    slug: "sambal-kering-gurih",
-    rating: 4.9,
-    sold: 95,
-    keywords: ["sambal", "pedas", "gurih"],
-  },
-  // Tambahkan produk lain di sini
-];
+export async function fetchProductList() {
+  const db = getFirestore();
+  const snap = await getDocs(collection(db, 'products'));
+  return snap.docs.map(doc => doc.data());
+}
 
 export function detectIntentAndRespond(text) {
   const msg = text.toLowerCase();

@@ -1,5 +1,5 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-
+import { createIcons, icons } from 'lucide';
 import { detectIntentAndRespond } from '../modules/intentHandler.js';
 import { appendMessage,
   showTypingBubble,
@@ -8,6 +8,7 @@ import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { logout } from '../modules/authHandler.js';
 
+createIcons({ icons });
 let PRODUCT_LIST = [];
 
 export default function ChatTelegram() {
@@ -103,12 +104,12 @@ export default function ChatTelegram() {
           items.push(`
             <div class="product-item flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700 transition cursor-pointer" data-slug="${p.slug}">
               <img src="${p.img}" alt="${p.name}" class="w-10 h-10 rounded-full object-cover border border-gray-500" />
-              <div>
-                <div class="font-medium flex items-center gap-2">
+              <div style="width: -webkit-fill-available;">
+                <div class="font-medium flex justify-between items-center gap-2">
                   ${p.name}
-                  <span class="text-yellow-400 text-sm">⭐ ${p.rating ?? '0'}</span>
+                  <span class="text-yellow-400 float-end text-sm">⭐ ${p.rating ?? '0'}</span>
                 </div>
-                <div class="text-sm text-gray-400">${p.price}</div>
+                <div class="text-sm text-gray-400">Rp.${p.price}</div>
               </div>
             </div>
           `);
@@ -149,18 +150,18 @@ export default function ChatTelegram() {
       <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
       <!-- Sidebar -->
       <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
-        <h2 class="text-xl font-bold mb-4">🛍️ Produk</h2>
-        <div class="border-t border-gray-700 pt-4"></div>
-        <div id="sidebarProduct" class="space-y-2"></div>
-        <div class="relative bottom-0 left-0">
-        <div class="mt-6 pt-4">
+        <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold mb-0">🛍️ Produk</h2>
           <button id="logoutUserBtn" class="cursor-pointer text-sm text-red-400 hover:underline">Logout</button>
           </div>
+        <div class="border-t border-gray-700 mt-4 pt-4"></div>
+        <div id="sidebarProduct" class="space-y-2"></div>
+        <div class="relative bottom-0 left-0">
         </div>
       </div>
       <!-- Main content -->
       <div class="flex-1 flex flex-col">
-        <div class="p-3 border-b border-gray-700 bg-[#262838] flex justify-between items-center">
+        <div class="p-3 border-b border-gray-700 bg-[#262838] flex justify-between items-center fixed-top">
           <div class="flex items-center gap-2">
             <!-- Sidebar open button for mobile -->
             <button id="sidebarBtn" class="md:hidden cursor-pointer mr-2 focus:outline-none">
@@ -180,11 +181,9 @@ export default function ChatTelegram() {
           </button>
         </div>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none">
-          <!-- Chat bubbles inserted here -->
-        </div>
+        <div id="chatBox" class="flex-1 overflow-y-auto md:pt-4 pt-20 md:pb-4 pb-20 p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
 
-        <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b]">
+        <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b] fixed-bottom">
         <textarea id="chatInput" rows="1" placeholder="Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></textarea>
           <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-3 py-3 rounded-full">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,12 +247,3 @@ async function handleRequest(prompt) {
     appendMessage({ sender: 'lyra', text: '😵 LYRA lagi error. Coba lagi nanti ya.' });
   }
 }
-
-window.askProduct = function (slug) {
-  const product = PRODUCT_LIST.find(p => p.slug === slug);
-  if (!product) return;
-
-  const pertanyaan = `Ceritain dong soal ${product.name}`;
-  appendMessage({ sender: 'user', text: pertanyaan });
-  appendMessage({ sender: 'lyra', product, text: `Wah, ${product.name} ini salah satu produk unggulan kami nih! 🤩` });
-};

@@ -9,7 +9,7 @@ export default function AdminLogin() {
         <h2 class="text-xl font-bold">🔐 Admin Login</h2>
         <input type="email" id="admin-email" placeholder="Email" required class="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input type="password" id="admin-password" placeholder="Password" required class="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <button type="submit" class="w-full bg-purple-600 p-2 rounded" id="loginBtn">Login</button>
+        <button type="submit" class="w-full cursor-pointer bg-purple-600 p-2 rounded" id="loginBtn">Login</button>
         <div id="loginError" class="text-red-400 text-sm hidden"></div>
         <div id="loginSuccess" class="text-green-400 text-sm hidden">Login berhasil! Mengalihkan...</div>
       </form>
