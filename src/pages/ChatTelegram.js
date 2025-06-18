@@ -51,7 +51,7 @@ export default function ChatTelegram() {
       }
     });
 
-    sendBtn?.addEventListener('click', () => {
+    sendBtn?.addEventListener('click', async () => {
       const text = input.value.trim();
       if (!text) return;
 
@@ -64,7 +64,15 @@ export default function ChatTelegram() {
       if (isGuest && chatCount >= LIMIT) return showLimitModal();
       if (isGuest) chatCount++;
 
-      const result = detectIntentAndRespond(text);
+      // 🔍 Deteksi intent manual dulu
+      if (/produk apa|punya apa|katalog|jual apa/i.test(text)) {
+        appendMessage({ sender: 'lyra', text: '📦 Ini beberapa produk dari toko aku:' });
+        PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', text: `Ada ${p.name}:`, product: p }));
+        return; // ⛔ STOP, jangan lanjut ke GPT
+      }
+
+      // 🧠 AI-based intent detection
+      const result = await detectIntentAndRespond(text);
 
       if (result.intent === 'all') {
         appendMessage({ sender: 'lyra', text: result.label });
@@ -78,7 +86,7 @@ export default function ChatTelegram() {
       } else if (result.intent === 'match') {
         appendMessage({ sender: 'lyra', text: result.label, product: result.product });
       } else {
-        handleRequest(text);
+        handleRequest(text); // fallback only
       }
     });
 

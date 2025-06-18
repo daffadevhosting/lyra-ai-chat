@@ -1,6 +1,6 @@
 # LYRA AI Chat Commerce 🧠🛍️
 
-LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu pengguna dalam bentuk percakapan bergaya Telegram. Tak cuma ngobrol, LYRA juga bisa **menawarkan produk toko online secara cerdas**, tampilkan **bubble produk interaktif**, dan **bekerja layaknya CS pintar yang gak capek-capek jualan**.
+LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu pengguna dalam bentuk percakapan bergaya Telegram. Tak cuma ngobrol, LYRA juga bisa **menawarkan produk toko online secara cerdas**, tampilkan **bubble produk interaktif**, dan **bekerja layaknya CS pintar yang gak capek-capek jualan**. Tinggal tanya, "Lyra, punya produk apa?" Lyra bakal ngasih katalog.
 
 ---
 
@@ -11,6 +11,62 @@ LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu penggun
 |![](./public/lyra-ai.png)|
 
 [![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lyra-ai-nine.vercel.app)
+
+# 📖 Panduan Cepat Pengguna LYRA
+
+LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan gaya ngobrol santai. Yuk, simak cara pakainya:
+
+---
+
+## 🤖 Cara Bertanya
+
+### 📦 Lihat Semua Produk
+
+> **Tanya:** "Punya produk apa aja?", "Katalognya dong"
+> **Hasil:** LYRA akan kirim daftar semua produk yang tersedia.
+
+### 🔥 Lihat Produk Terlaris
+
+> **Tanya:** "Apa produk terlaris?", "Yang paling banyak dibeli apa?"
+> **Hasil:** LYRA akan menampilkan produk dengan penjualan terbanyak.
+
+### 🌟 Lihat Produk dengan Rating Tertinggi
+
+> **Tanya:** "Produk paling enak?", "Yang ratingnya paling tinggi apa?"
+> **Hasil:** LYRA akan tampilkan produk dengan bintang tertinggi.
+
+### 🔍 Cari Produk Spesifik
+
+> **Tanya:** "Ada keripik singkong?", "Punya bubur mang oleh ga?"
+> **Hasil:** LYRA akan mencocokkan nama/kata kunci dengan katalog produk.
+
+### 🙋 Tanya Hal Lain
+
+> **Tanya:** "Cara jadi reseller gimana?", "Bisa kirim ke luar kota?"
+> **Hasil:** LYRA akan jawab secara umum atau kasih saran.
+
+---
+
+## ⚠️ Batasan Fitur
+
+* Tanpa login: Maksimal 10 chat/hari.
+* Login Google: 50 chat/hari.
+* Ingin akses penuh? Hubungi admin!
+
+---
+
+## 📦 Tips Tambahan
+
+* Klik produk di sidebar untuk tanya langsung ke LYRA.
+* Pakai kata kunci umum seperti "keripik", "sambal", "kopi" untuk hasil terbaik.
+* LYRA bakal makin pintar seiring waktu, jadi terus coba aja ya 😉
+
+---
+
+Selamat berbelanja bareng LYRA! 💜
+
+> Dibuat oleh nDang & Daffa, manusia nyeleneh dari Tasik.
+
 
 ## ✨ Fitur Utama
 

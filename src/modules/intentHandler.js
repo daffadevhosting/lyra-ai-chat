@@ -1,5 +1,4 @@
 // src/modules/intentHandler.js
-
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 let PRODUCT_LIST = [];
@@ -12,70 +11,36 @@ export async function fetchProductList() {
   return PRODUCT_LIST;
 }
 
-export async function detectIntentAndRespond(userPrompt) {
-  const products = await fetchProductList();
+export function detectIntentAndRespond(text) {
+  const msg = text.toLowerCase();
 
-  const systemPrompt = `Anda adalah “Lyra”, chatbot e-commerce ramah berbahasa Indonesia yang memiliki akses penuh ke sebuah array JavaScript bernama PRODUCT_LIST. Setiap item di PRODUCT_LIST memiliki field: { id, name, sold, rating, … }.
+  if (/produk apa|punya apa|katalog|jual apa/i.test(msg)) {
+    return { intent: 'all', label: '📦 Ini beberapa produk dari toko aku:' };
+  }
 
-Saat menerima pesan dari user, Anda wajib mengklasifikasikan ke dalam tepat satu intent:
-  • all       → user ingin melihat semua produk  
-  • best      → user ingin tahu produk terlaris  
-  • rating    → user ingin tahu produk dengan rating tertinggi  
-  • match     → user mencari produk spesifik (nama/kategori/fitur)  
-  • fallback  → user menanyakan hal di luar 4 intent di atas  
+  if (/rekomendasi|apa yang paling laku|best seller/i.test(msg)) {
+    return { intent: 'best', label: '🔥 Ini produk paling laris minggu ini!' };
+  }
 
-Kemudian keluarkan hanya satu objek JSON valid (tanpa penjelasan lain) dengan properti:
-  • intent     : “all” | “best” | “rating” | “match” | “fallback”  
-  • label      : teks ramah dalam Bahasa Indonesia yang akan dikirim Lyra sebelum detail produk  
-  • product(s) :  
-      – Untuk intent “all”: Hanya sertakan key intent & label, proses looping PRODUCT_LIST dilakukan di kode Anda  
-      – Untuk intent “best”/“rating”: sertakan key “product” dengan satu objek produk terbaik  
-      – Untuk intent “match”: sertakan key “product” dengan satu objek produk yang paling sesuai  
-      – Untuk intent “fallback”: omit key “product”
+  if (/paling enak|favorit|terenak|terbaik/i.test(msg)) {
+    return { intent: 'rating', label: '😋 Ini produk favorit pelanggan kami!' };
+  }
 
-Struktur JSON:
-{
-  "intent": "…",
-  "label":  "…",
-  // hanya sertakan “product” jika intent adalah best, rating, atau match
-  "product": { … }
-}
-
-Contoh produk yang tersedia:
-${JSON.stringify(products.slice(0, 5), null, 2)}`;
-
-  const body = {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ]
-  };
-
-  try {
-    console.log('👉 Payload ke GPT:', JSON.stringify(body, null, 2));
-
-    const res = await fetch('https://grey-api.cbp629tmm2.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    const data = await res.json();
-
-    // Amanin jika langsung object
-    if (typeof data.reply === 'object') return data.reply;
-
-console.warn('DEBUG reply:', data.reply);
-
-    // Coba parse kalau string
-    if (typeof data.reply === 'string') return JSON.parse(data.reply);
-
-    throw new Error('Response tidak dikenali');
-  } catch (err) {
-    console.error('❌ Gagal deteksi intent:', err);
+  if (/siapa.*buat|dibuat.*siapa|developer|tinggal.*mana/i.test(msg)) {
     return {
-      intent: 'fallback',
-      label: 'Maaf, saya belum mengerti. Bisa dijelaskan lagi, ya?'
+      intent: 'creator',
+      label: 'Aku dibuat sama nDang, developer dari Tasik. Cek source code-ku di sini ya 👉 https://github.com/daffadevhosting/lyra-ai-chat'
     };
   }
+
+  const matched = PRODUCT_LIST.find(p =>
+    msg.includes(p.name.toLowerCase()) ||
+    (p.keywords && p.keywords.some(k => msg.includes(k)))
+  );
+
+  if (matched) {
+    return { intent: 'match', label: `Wah, kamu nyebut ${matched.name}?! Nih yang lagi hits!`, product: matched };
+  }
+
+  return { intent: null };
 }
