@@ -81,6 +81,10 @@ src/
 
  ## 💻 Demo
 
+|         - LYRA di hp -         |
+|--------------------------------|
+|![](./public/lyra-mob.png)|
+
 [LYRA AI-shop](https://lyra-ai-nine.vercel.app) Deployed via vercel
 
 “LYRA bukan sekadar AI, dia CS toko online yang ngerti bahasa manusia dan bisa closing jualan.” – Kita 😎

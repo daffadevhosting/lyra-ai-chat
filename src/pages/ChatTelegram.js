@@ -1,4 +1,4 @@
-import { detectIntent } from '../modules/intentHandler.js';
+import { detectIntentAndRespond, PRODUCT_LIST } from '../modules/intentHandler.js';
 import { appendMessage,
   showTypingBubble,
   removeTypingBubble } from '../modules/chatRenderer.js';
@@ -37,22 +37,21 @@ export default function ChatTelegram() {
       if (isGuest && chatCount >= LIMIT) return showLimitModal();
       if (isGuest) chatCount++;
 
-      if (detectIntent(text)) {
-        const produk = {
-          name: 'Keripik Lada Hitam',
-          price: 'Rp200.000',
-          img: 'https://down-id.img.susercontent.com/file/sg-11134201-22110-j5mix2jpi9jv21',
-          slug: 'keripik-lada-hitam',
-        };
+      const result = detectIntentAndRespond(text);
 
-        appendMessage({
-          sender: 'lyra',
-          text: 'Wah, kamu nyebut keripik?! Nih yang lagi jadi primadona minggu ini 😋',
-          replyTo: text,
-          product: produk,
-        });
+      if (result.intent === 'all') {
+        appendMessage({ sender: 'lyra', text: result.label });
+        PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', product: p }));
+      } else if (result.intent === 'best') {
+        const top = [...PRODUCT_LIST].sort((a, b) => b.sold - a.sold)[0];
+        appendMessage({ sender: 'lyra', text: result.label, product: top });
+      } else if (result.intent === 'rating') {
+        const best = [...PRODUCT_LIST].sort((a, b) => b.rating - a.rating)[0];
+        appendMessage({ sender: 'lyra', text: result.label, product: best });
+      } else if (result.intent === 'match') {
+        appendMessage({ sender: 'lyra', text: result.label, product: result.product });
       } else {
-        handleRequest(text);
+        handleRequest(text); // fallback ke GPT
       }
     });
 
@@ -90,13 +89,13 @@ export default function ChatTelegram() {
             <button id="sidebarBtn" class="md:hidden mr-2 focus:outline-none">
               <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <img src="/assets/lyra-avatar.png" class="w-8 h-8 rounded-full border border-purple-600" />
+            <img src="./logo.png" class="w-8 h-8 rounded-full border border-purple-600" />
             <div>
               <div class="font-semibold">LYRA</div>
               <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
             </div>
           </div>
-          <button id="loginBtn" class="flex items-center gap-2 text-sm bg-purple-700 px-3 py-1 rounded">
+          <button id="loginBtn" class="cursor-pointer flex items-center gap-2 text-sm bg-purple-700 px-3 py-1 rounded">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 012 2v4m-6 6H9m6 0V9m0 6l3 3m-3-3l-3 3" />
             </svg>
@@ -114,7 +113,7 @@ export default function ChatTelegram() {
             placeholder="Ketik sesuatu..."
             class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"
           />
-          <button id="sendBtn" class="flex items-center gap-2 bg-purple-600 px-4 py-2 rounded-full">
+          <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-4 py-2 rounded-full">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12l16-6m0 0l-6 16m6-16L4 12" />
             </svg>
