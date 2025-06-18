@@ -3,7 +3,6 @@
 LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu pengguna dalam bentuk percakapan bergaya Telegram. Tak cuma ngobrol, LYRA juga bisa **menawarkan produk toko online secara cerdas**, tampilkan **bubble produk interaktif**, dan **bekerja layaknya CS pintar yang gak capek-capek jualan**.
 
 ---
-# LYRA AI Chat Commerce 🧠🛍️
 
 ### 🖼️ Screenshot
 
@@ -11,8 +10,7 @@ LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu penggun
 |--------------------------------|
 |![](./public/lyra-ai.png)|
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=vercel.json)
-[![Vercel Status](https://img.shields.io/badge/deployed-vercel-brightgreen.svg?logo=vercel)](https://lyra-ai.vercel.app)
+[![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lyra-ai-nine.vercel.app)
 
 ## ✨ Fitur Utama
 
