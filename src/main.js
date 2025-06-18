@@ -1,51 +1,49 @@
-// src/main.js
 import './style.css';
 import ChatTelegram from './pages/ChatTelegram';
 import AdminLogin, { initAdminLoginPage } from './pages/AdminLogin';
 import AdminPanel, { initAdminPanel } from './pages/AdminPanel';
-import { onLoginStateChanged } from './modules/adminAuth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { getApp } from 'firebase/app';
 
-const db = getFirestore(getApp());
 const app = document.querySelector('#app');
-const route = window.location.pathname;
 
-let isProcessing = false;
-
-onLoginStateChanged(async (user) => {
-  if (isProcessing) return;
-  isProcessing = true;
-
-  if (route === '/admin') {
-    if (user) {
-      const docRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(docRef);
-      if (snap.exists() && snap.data().isAdmin === true) {
-        app.innerHTML = AdminPanel();
-        requestAnimationFrame(initAdminPanel);
-      } else {
-        window.location.href = '/';
-      }
-    } else {
-      window.location.href = '/login';
-    }
-  } else if (route === '/login') {
-    if (user) {
-      const docRef = doc(db, 'users', user.uid);
-      const snap = await getDoc(docRef);
-      if (snap.exists() && snap.data().isAdmin === true) {
-        window.location.href = '/admin';
-      } else {
-        window.location.href = '/';
-      }
-    } else {
-      app.innerHTML = AdminLogin();
-      requestAnimationFrame(initAdminLoginPage);
-    }
-  } else {
+const routes = {
+  '/': () => {
     app.innerHTML = ChatTelegram();
-  }
+  },
+  '/login': () => {
+    app.innerHTML = AdminLogin();
+    requestAnimationFrame(initAdminLoginPage);
+  },
+  '/admin': async () => {
+    const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+    const { getFirestore, doc, getDoc } = await import('firebase/firestore');
 
-  isProcessing = false;
-});
+    const auth = getAuth();
+    const db = getFirestore();
+
+    // tampilkan dulu loading (opsional)
+    app.innerHTML = `<div class="text-white p-10 text-center">🔐 Mengecek akses admin...</div>`;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
+
+      if (!snap.exists() || snap.data().isAdmin !== true) {
+        window.location.href = '/';
+        return;
+      }
+
+      app.innerHTML = AdminPanel();
+      requestAnimationFrame(initAdminPanel);
+    });
+  },
+};
+
+// 🚦 Jalankan route
+const path = window.location.pathname;
+const render = routes[path] || routes['/'];
+render();
