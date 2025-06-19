@@ -169,14 +169,14 @@ function handleCheckoutFlow() {
     }
 
     sendBtn?.addEventListener('click', async () => {
+      const text = input.value.trim();
+      if (!text) return;
     const styleMatch = text.match(/(ubah|ganti) (gaya|tone|suara) (ke|jadi) (formal|genz|jualan|friendly)/i);
     if (styleMatch) {
       modeLYRA = styleMatch[4].toLowerCase();
       appendMessage({ sender: 'lyra', text: `Gaya ngobrol diganti jadi *${modeLYRA}* ya! 😉` });
       return;
     }
-      const text = input.value.trim();
-      if (!text) return;
 
       appendMessage({ sender: 'user', text });
       input.value = '';
