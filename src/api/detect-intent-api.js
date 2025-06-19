@@ -33,8 +33,9 @@ Kembalikan JSON dengan format:
           { role: 'user', content: message }
         ]
       };
+      const groqKey = import.meta.env.VITE_GROQ_API_KEY;
 
-      const openaiRes = await fetch('https://grey-api.cbp629tmm2.workers.dev/', {
+      const openaiRes = await fetch(`${groqKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

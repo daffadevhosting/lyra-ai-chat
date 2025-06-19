@@ -23,6 +23,10 @@
 .show {
   display: block;
 }
+.open-product-link:hover {
+  text-decoration: none;
+  color: #60a5fa; /* biru terang */
+}
 .typing-bubble span:nth-child(2) {
   animation-delay: 0.2s;
 }

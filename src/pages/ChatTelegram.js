@@ -16,6 +16,40 @@ async function loadProductList() {
   PRODUCT_LIST = snapshot.docs.map(doc => doc.data());
 }
 
+function getGreetingByTime() {
+  const now = new Date();
+  const hour = now.getHours();
+
+  if (hour >= 4 && hour < 11) return '🌞 Selamat pagi';
+  if (hour >= 11 && hour < 15) return '☀️ Selamat siang';
+  if (hour >= 15 && hour < 18) return '🌇 Selamat sore';
+  return '🌙 Selamat malam';
+}
+
+async function sendWelcomeMessage(user) {
+  const greeting = getGreetingByTime();
+  const name = user?.displayName || 'kamu';
+
+  const welcomeTexts = [
+    `${greeting}, ${name}! Aku LYRA 😉`,
+    `${greeting}, ${name}! Siap bantu kamu cari produk kece hari ini. 😎`,
+    `Halo ${name}, ${greeting}! Aku LYRA — asisten AI kamu di sini.`,
+    `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
+  ];
+
+  const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
+
+  appendMessage({ sender: 'lyra', text: randomText });
+
+  // Tambahin sapaan follow-up
+  setTimeout(() => {
+    appendMessage({
+      sender: 'lyra',
+      text: `Coba klik produk di sidebar atau langsung tanya apapun, ${name}. Aku standby! 🚀`,
+    });
+  }, 1200);
+}
+
 export default function ChatTelegram() {
   setTimeout(async () => {
     const sendBtn = document.getElementById('sendBtn');
@@ -39,7 +73,9 @@ export default function ChatTelegram() {
         loginBtn.disabled = true;
         logoutBtn?.classList.remove('hidden');
         hideLimitModal();
+        sendWelcomeMessage(user);
       } else {
+        sendWelcomeMessage(user);
         logoutBtn?.classList.add('hidden');
       }
     });
@@ -122,6 +158,78 @@ export default function ChatTelegram() {
       `);
       sidebarProduct.innerHTML = items.join('');
 
+      const randomResponses = [
+        "Lihat nih, {{name}} ini best seller banget! 🤩",
+        "Wah, {{name}} ini emang bikin penasaran. Aku ceritain ya!",
+        "Cocok banget nih, {{name}} buat gaya kamu. 😉",
+        "Banyak yang suka {{name}} — kamu pasti juga bakal suka!",
+        "{{name}} ini punya fitur kece, langsung aja kita kulik!",
+      ];
+
+      function getRandomResponse(name) {
+        const template = randomResponses[Math.floor(Math.random() * randomResponses.length)];
+        return template.replace('{{name}}', name);
+      }
+
+      const userPrompts = [
+        "Ceritain dong soal {{name}}.",
+        "Eh, ini {{name}} kayaknya menarik, ya?",
+        "{{name}} ini produk apa sih?",
+        "Gua penasaran deh sama {{name}}.",
+        "Ini {{name}} kegunaannya apa, bre?",
+      ];
+      function getRandomUserPrompt(name) {
+        const prompt = userPrompts[Math.floor(Math.random() * userPrompts.length)];
+        return prompt.replace('{{name}}', name);
+      }
+
+      function generateProductTeaser(product) {
+      const desc = product.description || 'produk menarik dari kami';
+      const teasers = [
+        `✨ ${product.name} hadir dengan ${desc.slice(0, 60)}...`,
+        `🎯 Ini dia highlight dari ${product.name}: ${desc.slice(0, 70)}...`,
+        `🔍 Sekilas tentang ${product.name}: ${desc.slice(0, 65)}...`,
+        `💡 ${product.name} punya fitur utama: ${desc.slice(0, 60)}...`,
+        `🔥 Kepoin ${product.name}, katanya sih: ${desc.slice(0, 70)}...`,
+      ];
+      return teasers[Math.floor(Math.random() * teasers.length)];
+      }
+
+function openProductModal(product) {
+  document.getElementById('modal-image').src = product.img || '/default.jpg';
+  document.getElementById('modal-title').textContent = product.name;
+  document.getElementById('modal-rating').textContent = product.rating;
+  document.getElementById('modal-sold').textContent = product.sold;
+  document.getElementById('modal-price').textContent = `Rp ${product.price.toLocaleString()}`;
+
+    const modal = document.getElementById('product-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    // Buka modal produk + animasi
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+      modalContent.classList.remove('opacity-0', 'scale-95');
+      modalContent.classList.add('opacity-100', 'scale-100');
+    }, 10);
+
+    // Midtrans tombol
+    document.getElementById('buy-button').onclick = () => {
+      snap.pay(product.snapToken);
+    };
+  }
+  document.getElementById('modal-close').onclick = () => {
+    const modal = document.getElementById('product-modal');
+    const modalContent = document.getElementById('modal-content');
+
+    // Kasih efek nutup
+    modalContent.classList.remove('opacity-100', 'scale-100');
+    modalContent.classList.add('opacity-0', 'scale-95');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 300);
+  };
+
       sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
         if (!target) return;
@@ -129,26 +237,52 @@ export default function ChatTelegram() {
         const product = PRODUCT_LIST.find(p => p.slug === slug);
         if (!product) return console.warn('Produk tidak ditemukan:', slug);
 
-        const msg = `Ceritain dong soal ${product.name}`;
+        // Random user message
+        const msg = getRandomUserPrompt(product.name);
         appendMessage({ sender: 'user', text: msg });
 
+        // Tampilkan efek ngetik
         showTypingBubble();
         showTypingHeader();
 
-        // Collapse sidebar (mobile)
-        sidebar.classList.add('-translate-x-full');
-        sidebarOverlay.classList.add('hidden');
-
         setTimeout(() => {
-          removeTypingBubble();
-          hideTypingHeader();
+          const lyraReply = getRandomResponse(product.name);
+
+          // LYRA bales sekaligus: text + reference ke product
           appendMessage({
             sender: 'lyra',
-            text: `Wah, ${product.name} ini salah satu favorit nih! 😍`,
+            text: lyraReply,
             product,
             replyTo: msg
           });
-        }, 1200);
+
+          removeTypingBubble();
+          hideTypingHeader();
+
+          // Optional: lanjut teaser deskripsi
+          setTimeout(() => {
+            const teaser = generateProductTeaser(product);
+            const linkHTML = `<a href="#" class="open-product-link text-blue-600 underline" data-slug="${product.slug}">Lihat detail produk</a>`;
+            const fullTeaser = `${teaser} ${linkHTML}`;
+            appendMessage({ sender: 'lyra', html: fullTeaser });
+
+            setTimeout(() => {
+            document.querySelectorAll('.open-product-link').forEach(link => {
+              link.onclick = (e) => {
+                e.preventDefault();
+                const slug = link.dataset.slug;
+                const product = PRODUCT_LIST.find(p => p.slug === slug);
+                if (product) openProductModal(product);
+              };
+            });
+          }, 50);
+
+          }, 800 + Math.random() * 400);
+        }, 1000 + Math.random() * 500);
+
+        // Tutup sidebar di mobile
+        sidebar.classList.add('-translate-x-full');
+        sidebarOverlay.classList.add('hidden');
       });
     }
   }, 50);
@@ -202,7 +336,27 @@ export default function ChatTelegram() {
         </div>
       </div>
 
-      <div id="loginModal" class="fixed hidden inset-0 bg-black/70 z-50 flex justify-center items-center">
+<div id="product-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
+  <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
+    <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
+    <div class="flex flex-col md:flex-row">
+      <img id="modal-image" src="" alt="Produk" class="w-full md:w-1/2 h-64 object-cover">
+      <div class="p-4 flex flex-col gap-2">
+      <div class="flex justify-between items-center-safe">
+        <h2 id="modal-title" class="text-xl font-bold"></h2>
+        <p class="text-sm text-yellow-400">⭐ <span id="modal-rating"></span></p>
+        </div>
+        <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
+        <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
+        <button id="buy-button" class="mt-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+          Beli Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+      <div id="loginModal" class="fixed hide inset-0 bg-black/70 z-50 flex justify-center items-center">
         <div class="bg-[#2a2c3b] text-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg border border-purple-500">
           <h3 class="text-lg font-bold mb-2">Maaf, kamu sudah mencapai batas chat gratis.</h3>
           <p class="mb-4">Yuk login untuk akses lebih lanjut!</p>
@@ -215,6 +369,7 @@ export default function ChatTelegram() {
 
 let chatCount = 0;
 const LIMIT = 10;
+const groqKey = import.meta.env.VITE_GROQ_API_KEY;
 
 function showTypingHeader() {
   const el = document.getElementById('typingStatus');
@@ -231,7 +386,7 @@ async function handleRequest(prompt) {
   showTypingHeader();
 
   try {
-    const res = await fetch('https://grey-api.cbp629tmm2.workers.dev/', {
+    const res = await fetch(`${groqKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, uid: getCurrentUID() }),

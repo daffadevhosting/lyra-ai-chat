@@ -1,8 +1,7 @@
-export function appendMessage({ sender, text, replyTo = null, product = null }) {
+export function appendMessage({ sender, text, html, replyTo = null, product = null }) {
   const chatBox = document.getElementById("chatBox");
   const div = document.createElement("div");
   div.className = `flex flex-col ${sender === 'user' ? 'items-end' : 'items-start'}`;
-
   if (replyTo) {
     const reply = document.createElement("div");
     reply.className = `text-sm text-gray-400 mb-1 italic`;
@@ -17,13 +16,18 @@ bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line 
     : 'bg-gray-700 text-white self-start rounded-bl-none'
 }`;
 
-bubble.textContent = text;
-const time = document.createElement("div");
-time.className = "text-xs text-gray-400 mt-1 px-1";
-time.textContent = formatTime();
+  if (html) {
+    bubble.innerHTML = html;
+  } else if (text) {
+    bubble.textContent = text;
+  }
 
-div.appendChild(bubble);
-div.appendChild(time);
+  const time = document.createElement("div");
+  time.className = "text-xs text-gray-400 mt-1 px-1";
+  time.textContent = formatTime();
+
+  div.appendChild(bubble);
+  div.appendChild(time);
 
 
   if (product) {

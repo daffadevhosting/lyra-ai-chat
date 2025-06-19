@@ -13,10 +13,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBYyqPWnDD8QLFka3QQ5tbhTsovxX4XePs",
-  authDomain: "lyra-ai-olshop.firebaseapp.com",
-  projectId: "lyra-ai-olshop",
-  appId: "1:660548874119:web:e4655c72cac3012afead22"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
