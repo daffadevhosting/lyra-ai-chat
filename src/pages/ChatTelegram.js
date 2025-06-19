@@ -317,9 +317,7 @@ function handleCheckoutFlow() {
 
       // 🧠 AI-based intent detection
       const result = await detectIntentAndRespond(text);
-      const styled = generateTone(text, 'genz'); // bisa: 'friendly', 'formal', 'jualan', 'default'
 
-appendMessage({ sender: 'lyra', text: styled, product });
       if (result.intent === 'all') {
         appendMessage({ sender: 'lyra', text: result.label });
         PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', product: p }));
@@ -335,8 +333,9 @@ appendMessage({ sender: 'lyra', text: styled, product });
         const matchedProduct = PRODUCT_LIST.find(p => text.toLowerCase().includes(p.name.toLowerCase()));
         if (matchedProduct) {
           const catIntent = detectCategoryIntent(text);
-          const catResponse = generateCategoryResponse(catIntent, matchedProduct);
-          appendMessage({ sender: 'lyra', text: catResponse, product: matchedProduct });
+          const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
+          const styled = generateTone(rawResponse, 'genz'); // bisa diganti tone lain
+          appendMessage({ sender: 'lyra', text: styled, product: matchedProduct });
         } else {
           handleRequest(text); // fallback only
         }
