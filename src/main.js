@@ -34,8 +34,8 @@ const renderChatIfLoggedIn = async () => {
     });
   } catch (err) {
     if (
-      err?.code === 'auth/invalid-api-key' ||
-      err?.message?.includes('invalid-api-key')
+      err?.code === 'FirebaseError' ||
+      err?.message?.includes('auth/invalid-api-key')
     ) {
       showUnderConstruction();
     } else {

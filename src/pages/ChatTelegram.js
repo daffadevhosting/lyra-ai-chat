@@ -341,10 +341,12 @@ function openProductModal(product) {
     <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
     <div class="flex flex-col md:flex-row">
       <img id="modal-image" src="" alt="Produk" class="w-full md:w-1/2 h-64 object-cover">
-      <div class="p-4 flex flex-col gap-2">
+      <div class="p-4 flex flex-col gap-2" style="
+          width: -webkit-fill-available;
+      ">
       <div class="flex justify-between items-center-safe">
-        <h2 id="modal-title" class="text-xl font-bold"></h2>
-        <p class="text-sm text-yellow-400">⭐ <span id="modal-rating"></span></p>
+        <h3 id="modal-title" class="text-xl font-bold"></h3>
+        <p class="text-sm text-yellow-400 md:mr-8 mr-0">⭐ <span id="modal-rating"></span></p>
         </div>
         <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
         <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
