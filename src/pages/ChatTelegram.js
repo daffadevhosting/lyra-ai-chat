@@ -325,7 +325,17 @@ function openProductModal(product) {
       const cartBtn = document.getElementById('cartBtn');
       cartBtn?.addEventListener('click', () => {
         if (cartItems.length === 0) {
+
+        setTimeout(() => {
+          showTypingBubble();
+          showTypingHeader();
+
+        setTimeout(() => {
           appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' });
+          removeTypingBubble();
+          hideTypingHeader();
+        }, 800 + Math.random() * 400);
+        }, 10);
           return;
         }
 
