@@ -16,6 +16,7 @@ export default function AdminPanel() {
           <input type="text" id="name" placeholder="Nama Produk" required class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
           <input type="text" id="price" placeholder="Harga (cth: Rp15.000)" required class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
           <input type="text" id="img" placeholder="Link Gambar (URL)" required class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
+          <textarea type="text" id="description" placeholder="Deskripsi Produk" required class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" rows="4"></textarea>
           <input type="text" id="slug" placeholder="Slug (cth: keripik-lada-hitam)" required class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
           <input type="number" id="rating" step="0.1" max="5" min="0" placeholder="Rating (0-5)" class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
           <input type="number" id="sold" placeholder="Total Terjual" class="w-full p-2 rounded bg-gray-800 border border-gray-600 focus:outline-none" />
@@ -44,7 +45,7 @@ export function initAdminPanel() {
 
   logoutBtn?.addEventListener('click', async () => {
     await logoutAdmin();
-    window.location.href = '/login';
+    window.location.href = '/';
   });
 
   form.addEventListener('submit', async (e) => {
@@ -53,12 +54,13 @@ export function initAdminPanel() {
       name: form.name.value,
       price: form.price.value,
       img: form.img.value,
+      description: form.description.value,
       slug: form.slug.value,
       rating: parseFloat(form.rating.value || 0),
       sold: parseInt(form.sold.value || 0),
       keywords: form.keywords.value.split(',').map(k => k.trim()).filter(Boolean),
     };
-    if (!data.name || !data.price || !data.img || !data.slug) {
+    if (!data.name || !data.price || !data.img || !data.description || !data.slug) {
       alert('Semua kolom wajib diisi, bre!');
       return;
     }
@@ -70,10 +72,11 @@ export function initAdminPanel() {
   async function renderProducts() {
     const products = await fetchProducts();
     list.innerHTML = products.map(p => `
-      <div class="border w-fit border-gray-600 p-3 rounded-lg">
+      <div class="border w-fit border-gray-600 p-3 rounded-lg" style="max-width: 197px;">
         <div class="font-bold text-lg">${p.name}</div>
         <img src="${p.img}" alt="${p.name}" class="h-32 object-cover mt-2 rounded" style='width: -webkit-fill-available;' />
         <div class="text-sm text-gray-300">${p.price} - Terjual: ${p.sold} - ⭐ ${p.rating}</div>
+        <div class="text-xs text-gray-400">Deskripsi: ${p.description}</div>
         <div class="text-xs text-gray-400">Slug: ${p.slug}</div>
         <div class="text-xs text-gray-400">Keyword: ${p.keywords?.join(', ')}</div>
       </div>

@@ -72,6 +72,10 @@ function respondWithTyping({ text, product = null, replyTo = null }) {
     hideTypingHeader();
   }, 1000 + Math.random() * 400); // biar dramatis
 }
+document.getElementById('atc')?.addEventListener('click', () => {
+  handleCartView(); // fungsi utama
+  showGlobalAlert('📦 Berhasil masuk keranjang kamu', 'info');
+});
 
 function renderProductGridInChat(products) {
   const html = `
@@ -81,7 +85,7 @@ function renderProductGridInChat(products) {
           <img src="${p.img}" class="w-full h-20 object-cover rounded" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
-          <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
+          <button id="atc" class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
         </div>
       `).join('')}
     </div>
@@ -150,7 +154,7 @@ export default function ChatTelegram() {
         sendBtn?.click();
       }
     });
-
+    
 function handleCheckoutFlow() {
   const { isEmpty, cartList, total } = cartManager.getCartSummary();
   if (isEmpty) {
@@ -372,6 +376,25 @@ function handleCheckoutFlow() {
       await logout();
       window.location.href = '/';
     });
+    
+const cheatsheetModal = document.getElementById('cheatsheet-modal');
+const cheatsheetContent = document.getElementById('cheatsheet-content');
+
+document.getElementById('openCheatsheet')?.addEventListener('click', () => {
+  cheatsheetModal.classList.remove('hidden');
+  setTimeout(() => {
+    cheatsheetContent.classList.remove('opacity-0', 'scale-95');
+    cheatsheetContent.classList.add('opacity-100', 'scale-100');
+  }, 10);
+});
+
+document.getElementById('closeCheatsheet')?.addEventListener('click', () => {
+  cheatsheetContent.classList.remove('opacity-100', 'scale-100');
+  cheatsheetContent.classList.add('opacity-0', 'scale-95');
+  setTimeout(() => {
+    cheatsheetModal.classList.add('hidden');
+  }, 200);
+});
 
     loginBtn?.addEventListener('click', login);
     modalLoginBtn?.addEventListener('click', login);
@@ -609,7 +632,7 @@ function openProductModal(product) {
   }, 50);
 
   return `
-    <div class="flex h-screen bg-[#1d1f2b] text-white font-sans relative overflow-hidden">
+    <div class="flex h-screen bg-white text-black dark:bg-[#1d1f2b] dark:text-white font-sans relative overflow-hidden">
       <!-- Sidebar overlay for mobile -->
       <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
       <!-- Sidebar -->
@@ -625,11 +648,19 @@ function openProductModal(product) {
           </button>
           </div>
         <div class="border-t border-gray-700 mt-4 pt-4"></div>
-        <div id="sidebarProduct" class="flex-1 overflow-y-auto space-y-2"></div>
+        <div id="sidebarProduct" class="flex-1 overflow-y-auto scrollbar-none space-y-2"></div>
         <div class="relative bottom-0 left-0">
         <div class="mt-auto pt-4 border-t border-gray-700">
+        <!-- Tombol Cheatsheet -->
+        <button id="openCheatsheet" class="flex items-center cursor-pointer gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-book-open w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path d="M2 6a2 2 0 0 1 2-2h7v16H4a2 2 0 0 1-2-2V6Z" />
+            <path d="M22 6a2 2 0 0 0-2-2h-7v16h7a2 2 0 0 0 2-2V6Z" />
+          </svg>
+          Cheatsheet
+        </button>
           <!-- Tombol Pengaturan -->
-          <button id="openSettings" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
+          <button id="openSettings" onclick="location.href='/underconstruction.html'" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-settings w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.7 0 1.31-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.6 1.72.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .7.4 1.31 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06c-.46.46-.6 1.12-.33 1.72v.01c.3.6.94 1 1.66 1H21a2 2 0 0 1 0 4h-.09c-.7 0-1.31.4-1.51 1Z"/>
@@ -661,11 +692,13 @@ function openProductModal(product) {
               <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
             </div>
           </div>
-        <button id="cartBtn" class="text-sm bg-orange-500 text-white px-3 py-1 rounded">🛒 Lihat Keranjang</button>
+        <button id="cartBtn" class="text-sm cursor-pointer bg-orange-500 text-white px-3 py-1 rounded">🛒 Lihat Keranjang</button>
         </div>
 
         <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
-
+        <div class="text-xs text-gray-400 text-center px-4 py-2">
+          <em><strong>L Y Я A</strong> is still learning. Verify any important information you receive.</em>
+        </div>
         <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b]">
         <textarea id="chatInput" rows="1" placeholder="Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></textarea>
           <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-3 py-3 rounded-full">
@@ -673,10 +706,10 @@ function openProductModal(product) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12l16-6m0 0l-6 16m6-16L4 12" />
             </svg>
           </button>
-        </div>
-      </div>
+       </div>
+       </div>
 
-      <div id="product-modal" class="fixed inset-0 z-50 hide bg-black/50 flex items-center justify-center">
+      <div id="product-modal" class="fixed inset-0 z-50 hide  bg-black/50 backdrop-blur-sm flex items-center justify-center">
         <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
           <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
           <div class="flex flex-col md:flex-row">
@@ -690,11 +723,41 @@ function openProductModal(product) {
               </div>
               <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
               <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
-              <button id="buy-button" class="mt-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+              <button id="buy-button" class="mt-auto cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
                 Beli Sekarang
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center">
+        <div class="bg-[#2c2e3e] rounded-lg max-w-md w-11/12 p-6 shadow-lg transform opacity-0 scale-95 transition-all duration-300" id="cheatsheet-content">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">📘 Cheatsheet L Y Я A</h2>
+            <button id="closeCheatsheet" class="text-gray-400 cursor-pointer hover:text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-x w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+              </svg>
+            </button>
+          </div>
+          <ul class="space-y-2 text-sm text-gray-300 list-disc list-inside max-h-[80vh] overflow-y-auto pr-2">
+            <li><code>ada produk apa</code> – tampilkan semua produk</li>
+            <li><code>minta best seller</code> – tampilkan produk terlaris</li>
+            <li><code>rekomendasi dong</code> – minta rekomendasi</li>
+            <li><code>lihat keranjang</code> – tampilkan isi keranjang</li>
+            <li><code>hapus (nama produk)</code> – hapus item keranjang</li>
+            <li><code>Nama: ...</code> – kirim data checkout <strong>(onworking)</strong></li>
+            <li><code>aku mau bayar</code> – Snap midtrans <strong>(onworking)</strong></li>
+            <li><code>ubah gaya ke genz</code> – ubah gaya bicara L Y Я A</li>
+            <li><code>kamu siapa?</code> – kenalan sama L Y Я A 😄</li>
+            <li><code>motto kamu apa</code> – tanya motto hidup LYRA</li>
+            <li><code>apa itu LYRA?</code> – tanya tentang L Y Я A</li>
+            <li><code>ini toko apa?</code> – tanya tentang toko ini</li>
+            <li>Dan masih banyak lagi! Coba aja tanya, L Y Я A siap bantu! 😊</li>
+            <li><small>bisa saja L Y Я A memberikan jawaban yang tidak relevan, jadi pastikan untuk bertanya dengan jelas ya!</small></li>
+          </ul>
+            <p class="text-center"><small>L Y Я A bisa salah. Silakan verifikasi info penting.</small></p>
         </div>
       </div>
 
@@ -705,8 +768,40 @@ function openProductModal(product) {
           <button id="modalLoginBtn" class="bg-purple-600 px-4 py-2 cursor-pointer rounded-full">Login dengan Google</button>
         </div>
       </div>
+      <div id="globalAlert" class="fixed top-4 right-4 z-[1000] hidden px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg"></div>
     </div>
   `;
+}
+function showGlobalAlert(message, type = 'info') {
+  const alertBox = document.getElementById('globalAlert');
+  if (!alertBox) return;
+
+  alertBox.textContent = message;
+  alertBox.className = 'fixed top-4 right-4 z-[1000] px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg';
+
+  switch (type) {
+    case 'success':
+      alertBox.classList.add('bg-green-500', 'text-white');
+      break;
+    case 'error':
+      alertBox.classList.add('bg-red-500', 'text-white');
+      break;
+    case 'warning':
+      alertBox.classList.add('bg-yellow-400', 'text-black');
+      break;
+    default:
+      alertBox.classList.add('bg-gray-800', 'text-white');
+  }
+
+  alertBox.classList.remove('hidden');
+
+  setTimeout(() => {
+    alertBox.classList.add('opacity-0');
+    setTimeout(() => {
+      alertBox.classList.add('hidden');
+      alertBox.classList.remove('opacity-0');
+    }, 300);
+  }, 3000);
 }
 
 async function handleRequest(prompt) {

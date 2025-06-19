@@ -64,3 +64,9 @@
 .bubble-pop {
   animation: bubblePop 0.25s ease-out;
 }
+.backdrop-blur-sm {
+  backdrop-filter: blur(6px);
+}
+#sidebarProduct::-webkit-scrollbar {
+  display: none;
+}
