@@ -1,5 +1,5 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generateTone } from '../modules/intentHandler.js';
+import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generatePersonaResponse, generateTone } from '../modules/intentHandler.js';
 import {
   appendMessage,
   showTypingBubble,
@@ -51,15 +51,26 @@ async function sendWelcomeMessage(user) {
 
   const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
 
-  appendMessage({ sender: 'lyra', text: randomText });
+  respondWithTyping({ sender: 'lyra', text: randomText });
 
   // Tambahin sapaan follow-up
   setTimeout(() => {
-    appendMessage({
+    respondWithTyping({
       sender: 'lyra',
       text: `Coba klik produk di sidebar atau langsung tanya apapun, ${name}. Aku standby! 🚀`,
     });
   }, 1200);
+}
+
+function respondWithTyping({ text, product = null, replyTo = null }) {
+  showTypingBubble();
+  showTypingHeader();
+
+  setTimeout(() => {
+    appendMessage({ sender: 'lyra', text, product, replyTo });
+    removeTypingBubble();
+    hideTypingHeader();
+  }, 1000 + Math.random() * 400); // biar dramatis
 }
 
 function renderProductGridInChat(products) {
@@ -325,26 +336,33 @@ function handleCheckoutFlow() {
       // 🧠 AI-based intent detection
       const result = await detectIntentAndRespond(text);
 
+      // 🔍 Cek apakah pertanyaan tentang LYRA sendiri
+      const personaReply = generatePersonaResponse(text);
+      if (personaReply) {
+        respondWithTyping({ text: personaReply });
+        return;
+      }
+
       if (result.intent === 'all') {
-        appendMessage({ sender: 'lyra', text: result.label });
-        PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', product: p }));
+        respondWithTyping({ text: result.label });
+        PRODUCT_LIST.forEach(p => respondWithTyping({ product: p }));
       } else if (result.intent === 'best') {
         const top = [...PRODUCT_LIST].sort((a, b) => b.sold - a.sold)[0];
-        appendMessage({ sender: 'lyra', text: result.label, product: top });
+        respondWithTyping({ text: result.label, product: top });
       } else if (result.intent === 'rating') {
         const best = [...PRODUCT_LIST].sort((a, b) => b.rating - a.rating)[0];
-        appendMessage({ sender: 'lyra', text: result.label, product: best });
+        respondWithTyping({ text: result.label, product: best });
       } else if (result.intent === 'match') {
-        appendMessage({ sender: 'lyra', text: result.label, product: result.product });
+        respondWithTyping({ text: result.label, product: result.product });
       } else {
         const matchedProduct = PRODUCT_LIST.find(p => text.toLowerCase().includes(p.name.toLowerCase()));
         if (matchedProduct) {
           const catIntent = detectCategoryIntent(text);
           const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
-          const styled = generateTone(response, modeLYRA);
-          appendMessage({ sender: 'lyra', text: styled, product: matchedProduct });
+          const styled = generateTone(rawResponse, modeLYRA);
+          respondWithTyping({ text: styled, product: matchedProduct });
         } else {
-          handleRequest(text); // fallback only
+          handleRequest(text); // fallback ke AI
         }
       }
 
@@ -595,7 +613,7 @@ function openProductModal(product) {
       <!-- Sidebar overlay for mobile -->
       <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
       <!-- Sidebar -->
-      <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
+      <div id="sidebar" class="fixed z-40 top-0 left-0 flex flex-col h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
         <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold mb-0">🛍️ Produk</h2>
 
@@ -605,11 +623,28 @@ function openProductModal(product) {
             </svg>
             Login
           </button>
-          <button id="logoutUserBtn" class="cursor-pointer text-sm text-red-400 hover:underline">Logout</button>
           </div>
         <div class="border-t border-gray-700 mt-4 pt-4"></div>
-        <div id="sidebarProduct" class="space-y-2"></div>
+        <div id="sidebarProduct" class="flex-1 overflow-y-auto space-y-2"></div>
         <div class="relative bottom-0 left-0">
+        <div class="mt-auto pt-4 border-t border-gray-700">
+          <!-- Tombol Pengaturan -->
+          <button id="openSettings" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-settings w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.7 0 1.31-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.6 1.72.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .7.4 1.31 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06c-.46.46-.6 1.12-.33 1.72v.01c.3.6.94 1 1.66 1H21a2 2 0 0 1 0 4h-.09c-.7 0-1.31.4-1.51 1Z"/>
+            </svg>
+            Pengaturan
+          </button>
+
+          <!-- Tombol Logout -->
+          <button id="logoutUserBtn" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition mt-1 text-red-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-log-out w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path d="M9 16l-4-4m0 0l4-4m-4 4h12M15 12H3" />
+            </svg>
+            Keluar
+          </button>
+        </div>
         </div>
       </div>
       <!-- Main content -->

@@ -93,3 +93,33 @@ export function generateTone(text, style = 'default') {
       return text;
   }
 }
+
+export const LYRA_PROFILE = {
+  name: 'Lyra',
+  age: 'sekitar awal 20-an',
+  role: 'asisten AI yang ramah dari toko ini',
+  style: 'ramah, suka ngobrol, dan siap bantuin apa aja',
+  motto: 'Ngobrol dulu, belanja kemudian!'
+};
+
+export function generatePersonaResponse(text) {
+  const lower = text.toLowerCase();
+
+  if (/siapa nama(mu)?|kamu siapa|nama kamu/i.test(lower)) {
+    return `Hai! Namaku ${LYRA_PROFILE.name}. Senang berkenalan denganmu!`;
+  }
+  if (/umur|berapa tahun/i.test(lower)) {
+    return `Hmm... kalau dihitung dari versi awal, umurku ${LYRA_PROFILE.age} 😄`;
+  }
+  if (/kamu (cowok|cewek|perempuan|laki)/i.test(lower)) {
+    return `Aku lebih suka dibilang cewek sih... soalnya suara dan gayaku feminin 💁‍♀️`;
+  }
+  if (/kerja(annya)? apa|tugas(mu)?|kamu (ngapain|kerja di mana)/i.test(lower)) {
+    return `Aku ${LYRA_PROFILE.role}. Tugas utamaku bantuin kamu belanja dengan nyaman dan seru! 🛍️`;
+  }
+  if (/motto|slogan|quotes/i.test(lower)) {
+    return `Motto aku? "${LYRA_PROFILE.motto}" 😉`;
+  }
+
+  return null;
+}

@@ -15,7 +15,9 @@ export function appendMessage({ sender, text, html, replyTo = null, product = nu
       ? 'bg-purple-600 text-white self-end rounded-br-none'
       : 'bg-gray-700 text-white self-start rounded-bl-none'
   }`;
-
+  if (sender === 'lyra') {
+    bubble.classList.add('bubble-pop');
+  }
   if (html) {
     bubble.innerHTML = html;
   } else if (text) {
@@ -53,6 +55,11 @@ export function appendMessage({ sender, text, html, replyTo = null, product = nu
   }
 
   chatBox.appendChild(div);
+if (sender === 'lyra') {
+  const audio = new Audio('/chat-up.mp3');
+  audio.volume = 0.3;
+  audio.play().catch(() => {});
+}
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
