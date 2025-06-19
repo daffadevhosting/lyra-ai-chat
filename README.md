@@ -1,20 +1,20 @@
-# LYRA AI Chat Commerce 🧠🛍️
+# L Y Я A AI Chat Commerce 🧠🛍️
 
-LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu pengguna dalam bentuk percakapan bergaya Telegram. Tak cuma ngobrol, LYRA juga bisa **menawarkan produk toko online secara cerdas**, tampilkan **bubble produk interaktif**, dan **bekerja layaknya CS pintar yang gak capek-capek jualan**. Tinggal tanya, "Lyra, punya produk apa?" Lyra bakal ngasih katalog.
+L Y Я A adalah asisten AI modern berbasis web yang dirancang untuk membantu pengguna dalam bentuk percakapan bergaya Telegram. Tak cuma ngobrol, L Y Я A juga bisa **menawarkan produk toko online secara cerdas**, tampilkan **bubble produk interaktif**, dan **bekerja layaknya CS pintar yang gak capek-capek jualan**. Tinggal tanya, "L Y Я A, punya produk apa?" L Y Я A bakal ngasih katalog.
 
 ---
 
 ### 🖼️ Screenshot
 
-|            - LYRA -            |
+|            - L Y Я A -            |
 |--------------------------------|
-|![](./src/assets/lyra-ai.png)|
+|![](./src/assets/lira-ai.png)|
 
-[![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lyra-ai-nine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lira-ai-nine.vercel.app)
 
-# 📖 Panduan Cepat Pengguna LYRA
+# 📖 Panduan Cepat Pengguna L Y Я A
 
-LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan gaya ngobrol santai. Yuk, simak cara pakainya:
+L Y Я A adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan gaya ngobrol santai. Yuk, simak cara pakainya:
 
 ---
 
@@ -24,31 +24,31 @@ LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan g
 
 > **Tanya:** "Punya produk apa aja?", "Katalognya dong"
 
-> **Hasil:** LYRA akan kirim daftar semua produk yang tersedia.
+> **Hasil:** L Y Я A akan kirim daftar semua produk yang tersedia.
 
 ### 🔥 Lihat Produk Terlaris
 
 > **Tanya:** "Apa produk terlaris?", "Yang paling banyak dibeli apa?"
 
-> **Hasil:** LYRA akan menampilkan produk dengan penjualan terbanyak.
+> **Hasil:** L Y Я A akan menampilkan produk dengan penjualan terbanyak.
 
 ### 🌟 Lihat Produk dengan Rating Tertinggi
 
 > **Tanya:** "Produk paling enak?", "Yang ratingnya paling tinggi apa?"
 
-> **Hasil:** LYRA akan tampilkan produk dengan bintang tertinggi.
+> **Hasil:** L Y Я A akan tampilkan produk dengan bintang tertinggi.
 
 ### 🔍 Cari Produk Spesifik
 
 > **Tanya:** "Ada keripik singkong?", "Punya bubur mang oleh ga?"
 
-> **Hasil:** LYRA akan mencocokkan nama/kata kunci dengan katalog produk.
+> **Hasil:** L Y Я A akan mencocokkan nama/kata kunci dengan katalog produk.
 
 ### 🙋 Tanya Hal Lain
 
 > **Tanya:** "Cara jadi reseller gimana?", "buka keranjang belanjaku", "Bisa kirim ke luar kota?"
 
-> **Hasil:** LYRA akan jawab secara umum atau kasih saran.
+> **Hasil:** L Y Я A akan jawab secara umum atau kasih saran.
 
 ---
 
@@ -62,13 +62,13 @@ LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan g
 
 ## 📦 Tips Tambahan
 
-* Klik produk di sidebar untuk tanya langsung ke LYRA.
+* Klik produk di sidebar untuk tanya langsung ke L Y Я A.
 * Pakai kata kunci umum seperti "keripik", "sambal", "kopi" untuk hasil terbaik.
-* LYRA bakal makin pintar seiring waktu, jadi terus coba aja ya 😉
+* L Y Я A bakal makin pintar seiring waktu, jadi terus coba aja ya 😉
 
 ---
 
-Selamat berbelanja bareng LYRA! 💜
+Selamat berbelanja bareng L Y Я A! 💜
 
 > Dibuat oleh nDang & Daffa, manusia nyeleneh dari Tasik.
 
@@ -119,8 +119,8 @@ src/
 
 1. Clone repo dan jalankan:
 ```bash
-   git clone https://github.com/daffadevhosting/lyra-ai-chat.git
-   cd lyra-ai-chat
+   git clone https://github.com/daffadevhosting/lira-ai-chat.git
+   cd lira-ai-chat
    npm install
    npm run dev
 ```
@@ -134,7 +134,7 @@ src/
 
  - Voice recognition (mic)
 
- - Text-to-speech (suara LYRA cewek)
+ - Text-to-speech (suara L Y Я A cewek)
 
  - Sistem donasi via Xendit
 
@@ -142,11 +142,11 @@ src/
 
  ## 💻 Demo
 
-|         - LYRA di hp -         |
+|         - L Y Я A di hp -         |
 |--------------------------------|
-|![](./src/assets/lyra-mob.png)|
+|![](./src/assets/lira-mob.png)|
 
-[LYRA AI-shop](https://lyra-ai-nine.vercel.app) Deployed via vercel
+[L Y Я A AI-shop](https://L Y Я A-ai-nine.vercel.app) Deployed via vercel
 
-“LYRA bukan sekadar AI, dia CS toko online yang ngerti bahasa manusia dan bisa closing jualan.” – Kita 😎
+“L Y Я A bukan sekadar AI, dia CS toko online yang ngerti bahasa manusia dan bisa closing jualan.” – Kita 😎
 
