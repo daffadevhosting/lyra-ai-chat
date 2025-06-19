@@ -8,7 +8,7 @@ L Y Я A adalah asisten AI modern berbasis web yang dirancang untuk membantu pen
 
 |            - L Y Я A -            |
 |--------------------------------|
-|![](./src/assets/lira-ai.png)|
+|![](./src/assets/lyra-ai.png)|
 
 [![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lira-ai-nine.vercel.app)
 
@@ -144,9 +144,9 @@ src/
 
 |         - L Y Я A di hp -         |
 |--------------------------------|
-|![](./src/assets/lira-mob.png)|
+|![](./src/assets/lyra-mob.png)|
 
-[L Y Я A AI-shop](https://L Y Я A-ai-nine.vercel.app) Deployed via vercel
+[L Y Я A AI-shop](https://lira-ai-nine.vercel.app) Deployed via vercel
 
 “L Y Я A bukan sekadar AI, dia CS toko online yang ngerti bahasa manusia dan bisa closing jualan.” – Kita 😎
 
