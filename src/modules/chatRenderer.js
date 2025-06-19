@@ -9,12 +9,12 @@ export function appendMessage({ sender, text, html, replyTo = null, product = nu
     div.appendChild(reply);
   }
 
-const bubble = document.createElement('div');
-bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line ${
-  sender === 'user'
-    ? 'bg-purple-600 text-white self-end rounded-br-none'
-    : 'bg-gray-700 text-white self-start rounded-bl-none'
-}`;
+  const bubble = document.createElement('div');
+  bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line ${
+    sender === 'user'
+      ? 'bg-purple-600 text-white self-end rounded-br-none'
+      : 'bg-gray-700 text-white self-start rounded-bl-none'
+  }`;
 
   if (html) {
     bubble.innerHTML = html;
@@ -29,7 +29,6 @@ bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line 
   div.appendChild(bubble);
   div.appendChild(time);
 
-
   if (product) {
     const card = document.createElement("div");
     card.className = `mt-2 rounded-xl overflow-hidden bg-[#2e2e3e] border border-gray-600`;
@@ -39,7 +38,14 @@ bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line 
         <div class="font-bold">${product.name}</div>
         <div class="text-sm text-gray-300">${product.price}</div>
         <div class="flex items-center gap-1.5 justify-between mt-2">
-        <a href="/produk/${product.slug}" class="text-sm flex inline-block px-3 py-1 bg-green-500 text-white rounded-lg">Beli Sekarang</a><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2-icon lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+          <a href="/produk/${product.slug}" class="text-sm flex inline-block px-3 py-1 bg-green-500 text-white rounded-lg">Beli Sekarang</a>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2-icon lucide-share-2">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+            <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+          </svg>
         </div>
       </div>
     `;
@@ -78,4 +84,14 @@ export function showTypingBubble() {
 
 export function removeTypingBubble() {
   document.getElementById('typingBubble')?.remove();
+}
+
+export function showTypingHeader() {
+  const el = document.getElementById('typingStatus');
+  if (el) el.classList.remove('hidden');
+}
+
+export function hideTypingHeader() {
+  const el = document.getElementById('typingStatus');
+  if (el) el.classList.add('hidden');
 }

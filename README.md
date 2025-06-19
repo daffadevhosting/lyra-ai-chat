@@ -8,7 +8,7 @@ LYRA adalah asisten AI modern berbasis web yang dirancang untuk membantu penggun
 
 |            - LYRA -            |
 |--------------------------------|
-|![](./public/lyra-ai.png)|
+|![](./src/assets/lyra-ai.png)|
 
 [![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lyra-ai-nine.vercel.app)
 
@@ -144,7 +144,7 @@ src/
 
 |         - LYRA di hp -         |
 |--------------------------------|
-|![](./public/lyra-mob.png)|
+|![](./src/assets/lyra-mob.png)|
 
 [LYRA AI-shop](https://lyra-ai-nine.vercel.app) Deployed via vercel
 

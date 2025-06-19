@@ -1,14 +1,20 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-
 import { detectIntentAndRespond } from '../modules/intentHandler.js';
-import { appendMessage,
+import {
+  appendMessage,
   showTypingBubble,
-  removeTypingBubble } from '../modules/chatRenderer.js';
+  removeTypingBubble,
+  showTypingHeader,
+  hideTypingHeader } from '../modules/chatRenderer.js';
 import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { logout } from '../modules/authHandler.js';
 
 let PRODUCT_LIST = [];
+let chatCount = 0;
+const LIMIT = 10;
+const groqKey = import.meta.env.VITE_GROQ_API_KEY;
+let cartItems = [];
 
 async function loadProductList() {
   const db = getFirestore();
@@ -28,7 +34,7 @@ function getGreetingByTime() {
 
 async function sendWelcomeMessage(user) {
   const greeting = getGreetingByTime();
-  const name = user?.displayName || 'kamu';
+  const name = user?.displayName || 'stranger';
 
   const welcomeTexts = [
     `${greeting}, ${name}! Aku LYRA 😉`,
@@ -48,6 +54,32 @@ async function sendWelcomeMessage(user) {
       text: `Coba klik produk di sidebar atau langsung tanya apapun, ${name}. Aku standby! 🚀`,
     });
   }, 1200);
+}
+
+function renderProductGridInChat(products) {
+  const html = `
+    <div class="grid grid-cols-2 gap-2">
+      ${products.map(p => `
+        <div class="bg-gray-700 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
+          <img src="${p.img}" class="w-full h-20 object-cover rounded" />
+          <div class="font-semibold">${p.name}</div>
+          <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
+          <button class="mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  appendMessage({ sender: 'lyra', html });
+
+  setTimeout(() => {
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+      btn.onclick = () => {
+        const slug = btn.dataset.slug;
+        const product = PRODUCT_LIST.find(p => p.slug === slug);
+        if (product) cartItems.push(product);
+      };
+    });
+  }, 50);
 }
 
 export default function ChatTelegram() {
@@ -100,13 +132,15 @@ export default function ChatTelegram() {
       if (isGuest && chatCount >= LIMIT) return showLimitModal();
       if (isGuest) chatCount++;
 
-      // 🔍 Deteksi intent manual dulu
-      if (/produk apa|punya apa|katalog|jual apa/i.test(text)) {
-        appendMessage({ sender: 'lyra', text: '📦 Ini beberapa produk dari toko aku:' });
-        PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', text: `Ada ${p.name}:`, product: p }));
-        return; // ⛔ STOP, jangan lanjut ke GPT
+      if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
+showTypingBubble();
+showTypingHeader();
+        appendMessage({ sender: 'lyra', text: '📦 Ini semua produk dari toko aku:', replyTo: text });
+removeTypingBubble();
+hideTypingHeader();
+        renderProductGridInChat(PRODUCT_LIST);
+        return;
       }
-
       // 🧠 AI-based intent detection
       const result = await detectIntentAndRespond(text);
 
@@ -183,7 +217,7 @@ export default function ChatTelegram() {
           responses.push(`Khusus hari ini, ${product.name} bebas ongkir loh! 😍`);
         }
         const templates = [
-          `${product.tags} ${product.name} ini salah satu andalan, harganya ${priceFormatted} aja.`,
+          `kamu pengen ${product.name} ini, ini salah satu andalan, harganya ${priceFormatted} aja.`,
           `Kamu pasti suka ${product.name}, dan kabar baiknya: cuma ${priceFormatted}!`,
           `Harga ${product.name}? ${priceFormatted}. Worth it banget untuk rasanya!`,
           `Mau yang bikin anget? ${product.name} jawabannya. Harga: ${priceFormatted}.`,
@@ -357,7 +391,7 @@ function openProductModal(product) {
         </div>
       </div>
 
-<div id="product-modal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center">
+<div id="product-modal" class="fixed inset-0 z-50 hide bg-black/50 flex items-center justify-center">
   <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
     <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
     <div class="flex flex-col md:flex-row">
@@ -388,20 +422,6 @@ function openProductModal(product) {
       </div>
     </div>
   `;
-}
-
-let chatCount = 0;
-const LIMIT = 10;
-const groqKey = import.meta.env.VITE_GROQ_API_KEY;
-
-function showTypingHeader() {
-  const el = document.getElementById('typingStatus');
-  if (el) el.classList.remove('hidden');
-}
-
-function hideTypingHeader() {
-  const el = document.getElementById('typingStatus');
-  if (el) el.classList.add('hidden');
 }
 
 async function handleRequest(prompt) {
