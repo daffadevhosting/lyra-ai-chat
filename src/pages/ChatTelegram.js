@@ -10,6 +10,7 @@ import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { logout } from '../modules/authHandler.js';
 
+let modeLYRA = 'jualan';
 let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
@@ -168,6 +169,12 @@ function handleCheckoutFlow() {
     }
 
     sendBtn?.addEventListener('click', async () => {
+    const styleMatch = text.match(/(ubah|ganti) (gaya|tone|suara) (ke|jadi) (formal|genz|jualan|friendly)/i);
+    if (styleMatch) {
+      modeLYRA = styleMatch[4].toLowerCase();
+      appendMessage({ sender: 'lyra', text: `Gaya ngobrol diganti jadi *${modeLYRA}* ya! 😉` });
+      return;
+    }
       const text = input.value.trim();
       if (!text) return;
 
@@ -334,7 +341,7 @@ function handleCheckoutFlow() {
         if (matchedProduct) {
           const catIntent = detectCategoryIntent(text);
           const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
-          const styled = generateTone(rawResponse, 'genz'); // bisa diganti tone lain
+          const styled = generateTone(response, modeLYRA);
           appendMessage({ sender: 'lyra', text: styled, product: matchedProduct });
         } else {
           handleRequest(text); // fallback only
