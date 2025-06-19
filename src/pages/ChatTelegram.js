@@ -1,5 +1,5 @@
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { detectIntentAndRespond } from '../modules/intentHandler.js';
+import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generateTone } from '../modules/intentHandler.js';
 import {
   appendMessage,
   showTypingBubble,
@@ -32,7 +32,12 @@ function getGreetingByTime() {
   return '🌙 Selamat malam';
 }
 
+let hasWelcomed = false;
+
 async function sendWelcomeMessage(user) {
+  if (hasWelcomed) return;
+  hasWelcomed = true;
+
   const greeting = getGreetingByTime();
   const name = user?.displayName || 'stranger';
 
@@ -64,7 +69,7 @@ function renderProductGridInChat(products) {
           <img src="${p.img}" class="w-full h-20 object-cover rounded" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
-          <button class="mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
+          <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
         </div>
       `).join('')}
     </div>
@@ -122,7 +127,7 @@ export default function ChatTelegram() {
         hideLimitModal();
         sendWelcomeMessage(user);
       } else {
-        sendWelcomeMessage(user);
+        sendWelcomeMessage(null);
         logoutBtn?.classList.add('hidden');
       }
     });
@@ -148,19 +153,19 @@ function handleCheckoutFlow() {
       sender: 'lyra',
       text: `Sebelum checkout, tolong isi data berikut ya:
 
-Nama:
-No WA aktif:
-Alamat lengkap:
-Kurir:
-Catatan:`
-    });
-    removeTypingBubble();
-    hideTypingHeader();
-  }, 800);
+        Nama:
+        No WA aktif:
+        Alamat lengkap:
+        Kurir:
+        Catatan:
+        `});
+            removeTypingBubble();
+            hideTypingHeader();
+          }, 800);
 
-  // Set flag supaya tahu user sedang dalam proses checkout
-  window.awaitingCheckoutForm = true;
-}
+          // Set flag supaya tahu user sedang dalam proses checkout
+          window.awaitingCheckoutForm = true;
+    }
 
     sendBtn?.addEventListener('click', async () => {
       const text = input.value.trim();
@@ -178,8 +183,116 @@ Catatan:`
         cartBtn?.click();
         return;
       }
+      if (/hapus/i.test(text)) {
+      const keyword = text.replace(/hapus/i, '').trim().toLowerCase();
+      const indexMatch = text.match(/ke-?(\d+)/i);
+      
+      if (indexMatch) {
+        const index = parseInt(indexMatch[1], 10) - 1;
+        if (cartItems[index]) {
+          const removed = cartItems.splice(index, 1);
+          appendMessage({ sender: 'lyra', text: `Oke, aku hapus ${removed[0].name} dari keranjang.` });
+        } else {
+          appendMessage({ sender: 'lyra', text: `Item nomor ${index + 1} nggak ditemukan di keranjang.` });
+        }
+      } else {
+        const slugMatch = PRODUCT_LIST.find(p => p.name.toLowerCase().includes(keyword));
+        if (slugMatch) {
+          cartItems = cartItems.filter(p => p.slug !== slugMatch.slug);
+          appendMessage({ sender: 'lyra', text: `Item "${slugMatch.name}" sudah dihapus dari keranjang.` });
+        } else {
+          appendMessage({ sender: 'lyra', text: `Item "${keyword}" nggak aku temuin di keranjang.` });
+        }
+      }
+
+      return;
+      }
       if (/checkout|bayar/i.test(text)) {
         return handleCheckoutFlow();
+      }
+      if (window.awaitingCheckoutForm && text.includes('Nama:')) {
+        window.awaitingCheckoutForm = false;
+
+      const isCheckoutFormat = text.includes('Nama:') && text.includes('Alamat');
+
+      if (isCheckoutFormat) {
+        const data = {};
+        text.split('\n').forEach(line => {
+          const [key, value] = line.split(':').map(s => s.trim());
+          if (key && value) data[key.toLowerCase()] = value;
+        });
+
+        // Validasi minimal
+        if (!data['nama'] || !data['alamat'] || !data['no wa aktif']) {
+          appendMessage({ sender: 'lyra', text: 'Format belum lengkap. Pastikan semua data sudah diisi ya!' });
+          return;
+        }
+
+        // Kirim ke Telegram
+        fetch('https://flat-river-1322.cbp629tmm2.workers.dev/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkout: data, cart: cartItems })
+        });
+
+        // Kirim ke backend Midtrans
+        fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user: data, cart: cartItems })
+        })
+        .then(res => res.json())
+        .then(json => {
+          if (json.snapToken) {
+            snap.pay(json.snapToken);
+          } else {
+            appendMessage({ sender: 'lyra', text: 'Gagal membuat link pembayaran. Coba lagi ya!' });
+          }
+        })
+        .catch(() => {
+          appendMessage({ sender: 'lyra', text: 'Ups! Terjadi kesalahan saat proses checkout.' });
+        });
+
+        appendMessage({ sender: 'lyra', text: 'Checkout berhasil dikirim. Silakan lanjut ke pembayaran ya 😊' });
+        return;
+      }
+
+        // Lalu munculkan Snap Midtrans
+        showTypingBubble();
+        showTypingHeader();
+        setTimeout(() => {
+          appendMessage({
+            sender: 'lyra',
+            text: 'Makasih! Sekarang aku sedang siapkan pembayaran kamu melalui Midtrans...'
+          });
+          removeTypingBubble();
+          hideTypingHeader();
+
+          // Simulasi Snap muncul
+          setTimeout(() => {
+            appendMessage({
+              sender: 'lyra',
+              html: '<button id="snapPayBtn" class="chat-btn bg-blue-600 text-white">Lanjut Bayar via Midtrans</button>'
+            });
+
+            setTimeout(() => {
+              document.getElementById('snapPayBtn')?.addEventListener('click', () => {
+                const token = 'DUMMY_SNAP_TOKEN';
+                snap.pay(token, {
+                  onSuccess: () => {
+                    appendMessage({ sender: 'lyra', text: 'Pembayaran sukses! 🎉 Terima kasih ya!' });
+                    // Kirim notifikasi ke Telegram jika perlu
+                  },
+                  onClose: () => {
+                    appendMessage({ sender: 'lyra', text: 'Pembayaran dibatalkan. Kalau butuh bantuan, bilang aja ya!' });
+                  }
+                });
+              });
+            }, 100);
+
+          }, 1000);
+        }, 1000);
+        return;
       }
 
       if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
@@ -201,9 +314,12 @@ Catatan:`
       }, 1200 + Math.random() * 400);
         return;
       }
+
       // 🧠 AI-based intent detection
       const result = await detectIntentAndRespond(text);
+      const styled = generateTone(text, 'genz'); // bisa: 'friendly', 'formal', 'jualan', 'default'
 
+appendMessage({ sender: 'lyra', text: styled, product });
       if (result.intent === 'all') {
         appendMessage({ sender: 'lyra', text: result.label });
         PRODUCT_LIST.forEach(p => appendMessage({ sender: 'lyra', product: p }));
@@ -216,8 +332,16 @@ Catatan:`
       } else if (result.intent === 'match') {
         appendMessage({ sender: 'lyra', text: result.label, product: result.product });
       } else {
-        handleRequest(text); // fallback only
+        const matchedProduct = PRODUCT_LIST.find(p => text.toLowerCase().includes(p.name.toLowerCase()));
+        if (matchedProduct) {
+          const catIntent = detectCategoryIntent(text);
+          const catResponse = generateCategoryResponse(catIntent, matchedProduct);
+          appendMessage({ sender: 'lyra', text: catResponse, product: matchedProduct });
+        } else {
+          handleRequest(text); // fallback only
+        }
       }
+
     });
 
     logoutBtn?.addEventListener('click', async () => {
@@ -403,51 +527,7 @@ function openProductModal(product) {
 
       });
 
-
-// Di dalam handleChatMessage tambahkan ini sebelum AI intent detection
-
-  if (window.awaitingCheckoutForm && text.includes('Nama:')) {
-    window.awaitingCheckoutForm = false;
-
-    // Kirim ke Telegram webhook di sini jika mau
-    // Lalu munculkan Snap Midtrans
-    showTypingBubble();
-    showTypingHeader();
-    setTimeout(() => {
-      appendMessage({
-        sender: 'lyra',
-        text: 'Makasih! Sekarang aku sedang siapkan pembayaran kamu melalui Midtrans...'
-      });
-      removeTypingBubble();
-      hideTypingHeader();
-
-      // Simulasi Snap muncul
-      setTimeout(() => {
-        appendMessage({
-          sender: 'lyra',
-          html: '<button id="snapPayBtn" class="chat-btn bg-blue-600 text-white">Lanjut Bayar via Midtrans</button>'
-        });
-
-        setTimeout(() => {
-          document.getElementById('snapPayBtn')?.addEventListener('click', () => {
-            const token = 'DUMMY_SNAP_TOKEN';
-            snap.pay(token, {
-              onSuccess: () => {
-                appendMessage({ sender: 'lyra', text: 'Pembayaran sukses! 🎉 Terima kasih ya!' });
-                // Kirim notifikasi ke Telegram jika perlu
-              },
-              onClose: () => {
-                appendMessage({ sender: 'lyra', text: 'Pembayaran dibatalkan. Kalau butuh bantuan, bilang aja ya!' });
-              }
-            });
-          });
-        }, 100);
-
-      }, 1000);
-    }, 1000);
-    return;
-  }
-      sidebarProduct.addEventListener('click', (e) => {
+  sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
         if (!target) return;
         const slug = target.dataset.slug;
@@ -536,7 +616,7 @@ function openProductModal(product) {
             </button>
             <img src="./logo.png" class="w-8 h-8 rounded-full border border-purple-600" />
             <div>
-              <div class="font-semibold">LYRA</div>
+              <div class="font-semibold">L Y Я A</div>
               <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
             </div>
           </div>

@@ -44,3 +44,52 @@ export function detectIntentAndRespond(text) {
 
   return { intent: null };
 }
+
+export function detectCategoryIntent(text) {
+  if (/rasa|enak|pedas|manis|gurih|lezat/i.test(text)) return 'rasa';
+  if (/sehat|manfaat|fungsi|bergizi/i.test(text)) return 'manfaat';
+  if (/harga|murah|diskon|promo|ongkir/i.test(text)) return 'harga';
+  if (/rekomendasi|cocok|bagus/i.test(text)) return 'rekomendasi';
+  return 'umum';
+}
+
+export function generateCategoryResponse(intent, product) {
+  const price = `Rp ${product.price.toLocaleString('id-ID')}`;
+  const name = product.name;
+
+  switch (intent) {
+    case 'rasa':
+      if (product.category === 'makanan')
+        return `${name} ini rasanya nagih banget, cocok dimakan kapan aja 😋`;
+      if (product.category === 'minuman')
+        return `${name} punya rasa khas yang nyegerin, cocok diminum pas santai 🍹`;
+      return `${name} punya rasa unik yang sayang dilewatkan!`;
+
+    case 'manfaat':
+      return `${name} ini punya manfaat ${product.tags?.includes('sehat') ? 'untuk kesehatan' : 'yang luar biasa'}, kamu wajib coba 💪`;
+
+    case 'harga':
+      return `Harganya cuma ${price}, ${product.tags?.includes('diskon') ? 'lagi diskon juga lho!' : 'worth it banget!'}`;
+
+    case 'rekomendasi':
+      return `${name} ini sering direkomendasikan ke pelanggan yang cari kualitas dan rasa terbaik ✨`;
+
+    default:
+      return `${name} ini salah satu andalan kami. Harganya ${price}. Yuk coba!`;
+  }
+}
+
+export function generateTone(text, style = 'default') {
+  switch (style) {
+    case 'formal':
+      return `Baik, ${text}`;
+    case 'friendly':
+      return `Hehe, ${text} yaa~ 😊`;
+    case 'genz':
+      return `${text} 🔥💯`;
+    case 'jualan':
+      return `${text} Yuk dibeli sekarang juga ya! 🛒✨`;
+    default:
+      return text;
+  }
+}
