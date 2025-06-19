@@ -32,7 +32,7 @@ async function sendWelcomeMessage(user) {
 
   const welcomeTexts = [
     `${greeting}, ${name}! Aku LYRA 😉`,
-    `${greeting}, ${name}! Siap bantu kamu cari produk kece hari ini. 😎`,
+    `${greeting}, ${name}! Lyra siap bantu kamu cari produk kece hari ini. 😎`,
     `Halo ${name}, ${greeting}! Aku LYRA — asisten AI kamu di sini.`,
     `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
   ];
@@ -166,9 +166,30 @@ export default function ChatTelegram() {
         "{{name}} ini punya fitur kece, langsung aja kita kulik!",
       ];
 
-      function getRandomResponse(name) {
-        const template = randomResponses[Math.floor(Math.random() * randomResponses.length)];
-        return template.replace('{{name}}', name);
+      function getProductByName(name) {
+        return PRODUCT_LIST.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
+      }
+
+      function getRandomResponse(productName) {
+        const product = getProductByName(productName);
+        const priceFormatted = product?.price
+          ? `Rp ${product.price.toLocaleString('id-ID')}`
+          : 'harga tidak tersedia';
+
+        if (!product) {
+          return `Hmm... aku belum nemu produk bernama "${productName}". Mau coba cari yang lain?`;
+        }
+        if (product.tags?.includes('gratis-ongkir')) {
+          responses.push(`Khusus hari ini, ${product.name} bebas ongkir loh! 😍`);
+        }
+        const templates = [
+          `${product.tags} ${product.name} ini salah satu andalan, harganya ${priceFormatted} aja.`,
+          `Kamu pasti suka ${product.name}, dan kabar baiknya: cuma ${priceFormatted}!`,
+          `Harga ${product.name}? ${priceFormatted}. Worth it banget untuk rasanya!`,
+          `Mau yang bikin anget? ${product.name} jawabannya. Harga: ${priceFormatted}.`,
+        ];
+
+        return templates[Math.floor(Math.random() * templates.length)];
       }
 
       const userPrompts = [
