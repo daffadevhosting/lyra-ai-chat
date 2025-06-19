@@ -23,26 +23,31 @@ LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan g
 ### 📦 Lihat Semua Produk
 
 > **Tanya:** "Punya produk apa aja?", "Katalognya dong"
+
 > **Hasil:** LYRA akan kirim daftar semua produk yang tersedia.
 
 ### 🔥 Lihat Produk Terlaris
 
 > **Tanya:** "Apa produk terlaris?", "Yang paling banyak dibeli apa?"
+
 > **Hasil:** LYRA akan menampilkan produk dengan penjualan terbanyak.
 
 ### 🌟 Lihat Produk dengan Rating Tertinggi
 
 > **Tanya:** "Produk paling enak?", "Yang ratingnya paling tinggi apa?"
+
 > **Hasil:** LYRA akan tampilkan produk dengan bintang tertinggi.
 
 ### 🔍 Cari Produk Spesifik
 
 > **Tanya:** "Ada keripik singkong?", "Punya bubur mang oleh ga?"
+
 > **Hasil:** LYRA akan mencocokkan nama/kata kunci dengan katalog produk.
 
 ### 🙋 Tanya Hal Lain
 
 > **Tanya:** "Cara jadi reseller gimana?", "Bisa kirim ke luar kota?"
+
 > **Hasil:** LYRA akan jawab secara umum atau kasih saran.
 
 ---
