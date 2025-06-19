@@ -58,7 +58,7 @@ async function sendWelcomeMessage(user) {
 
 function renderProductGridInChat(products) {
   const html = `
-    <div class="grid grid-cols-2 gap-2">
+    <div class=\"grid grid-cols-2 gap-2 animate-fade-in\">
       ${products.map(p => `
         <div class="bg-gray-700 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
           <img src="${p.img}" class="w-full h-20 object-cover rounded" />
@@ -70,6 +70,21 @@ function renderProductGridInChat(products) {
     </div>
   `;
   appendMessage({ sender: 'lyra', html });
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in > div {
+      animation: fadeIn 0.4s ease-in-out both;
+    }
+    .animate-fade-in > div:nth-child(1) { animation-delay: 0s; }
+    .animate-fade-in > div:nth-child(2) { animation-delay: 0.05s; }
+    .animate-fade-in > div:nth-child(3) { animation-delay: 0.1s; }
+    .animate-fade-in > div:nth-child(4) { animation-delay: 0.15s; }
+    .animate-fade-in > div:nth-child(5) { animation-delay: 0.2s; }
+    .animate-fade-in > div:nth-child(6) { animation-delay: 0.25s; }
+  `;
+  document.head.appendChild(style);
 
   setTimeout(() => {
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
@@ -131,14 +146,27 @@ export default function ChatTelegram() {
 
       if (isGuest && chatCount >= LIMIT) return showLimitModal();
       if (isGuest) chatCount++;
-
+      if (/keranjang|lihat keranjang|cart/i.test(text)) {
+        cartBtn?.click();
+        return;
+      }
       if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
-showTypingBubble();
-showTypingHeader();
-        appendMessage({ sender: 'lyra', text: '📦 Ini semua produk dari toko aku:', replyTo: text });
-removeTypingBubble();
-hideTypingHeader();
+      showTypingBubble();
+      showTypingHeader();
+
+      setTimeout(() => {
+        appendMessage({
+          sender: 'lyra',
+          text: '📦 Ini semua produk dari toko aku:',
+          replyTo: text
+        });
+        removeTypingBubble();
+        hideTypingHeader();
+      }, 600 + Math.random() * 400);
+
+      setTimeout(() => {
         renderProductGridInChat(PRODUCT_LIST);
+      }, 1200 + Math.random() * 400);
         return;
       }
       // 🧠 AI-based intent detection
@@ -261,7 +289,7 @@ function openProductModal(product) {
     const modalContent = document.getElementById('modal-content');
 
     // Buka modal produk + animasi
-    modal.classList.remove('hidden');
+    modal.classList.remove('hide');
     setTimeout(() => {
       modalContent.classList.remove('opacity-0', 'scale-95');
       modalContent.classList.add('opacity-100', 'scale-100');
@@ -272,6 +300,7 @@ function openProductModal(product) {
       snap.pay(product.snapToken);
     };
   }
+
   document.getElementById('modal-close').onclick = () => {
     const modal = document.getElementById('product-modal');
     const modalContent = document.getElementById('modal-content');
@@ -281,9 +310,46 @@ function openProductModal(product) {
     modalContent.classList.add('opacity-0', 'scale-95');
 
     setTimeout(() => {
-      modal.classList.add('hidden');
+      modal.classList.add('hide');
     }, 300);
   };
+
+  document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.onclick = () => {
+          const slug = btn.dataset.slug;
+          const product = PRODUCT_LIST.find(p => p.slug === slug);
+          if (product) cartItems.push(product);
+        };
+      });
+
+      const cartBtn = document.getElementById('cartBtn');
+      cartBtn?.addEventListener('click', () => {
+        if (cartItems.length === 0) {
+          appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' });
+          return;
+        }
+
+        let total = 0;
+        const cartList = cartItems.map((p, i) => {
+          total += p.price;
+          return `${i + 1}. ${p.name} - Rp ${p.price.toLocaleString('id-ID')}`;
+        }).join('\\n');
+
+        setTimeout(() => {
+          showTypingBubble();
+          showTypingHeader();
+
+        setTimeout(() => {
+          appendMessage({
+            sender: 'lyra',
+            text: `Isi keranjang kamu:\n${cartList}\n\nTotal: Rp ${total.toLocaleString('id-ID')}`
+          });
+          removeTypingBubble();
+          hideTypingHeader();
+        }, 800 + Math.random() * 400);
+        }, 10);
+
+      });
 
       sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
@@ -350,6 +416,13 @@ function openProductModal(product) {
       <div id="sidebar" class="fixed z-40 top-0 left-0 h-full w-4/5 max-w-xs bg-[#2c2e3e] p-4 border-r border-gray-700 transform -translate-x-full transition-transform duration-500 md:static md:translate-x-0 md:w-1/3 md:max-w-xs md:z-0">
         <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold mb-0">🛍️ Produk</h2>
+
+          <button id="loginBtn" class="cursor-pointer flex items-center gap-2 text-sm bg-purple-700 px-3 py-1 rounded">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 012 2v4m-6 6H9m6 0V9m0 6l3 3m-3-3l-3 3" />
+            </svg>
+            Login
+          </button>
           <button id="logoutUserBtn" class="cursor-pointer text-sm text-red-400 hover:underline">Logout</button>
           </div>
         <div class="border-t border-gray-700 mt-4 pt-4"></div>
@@ -371,12 +444,7 @@ function openProductModal(product) {
               <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
             </div>
           </div>
-          <button id="loginBtn" class="cursor-pointer flex items-center gap-2 text-sm bg-purple-700 px-3 py-1 rounded">
-            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h4a2 2 0 012 2v4m-6 6H9m6 0V9m0 6l3 3m-3-3l-3 3" />
-            </svg>
-            Login
-          </button>
+        <button id="cartBtn" class="text-sm bg-orange-500 text-white px-3 py-1 rounded">🛒 Lihat Keranjang</button>
         </div>
 
         <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
@@ -391,27 +459,27 @@ function openProductModal(product) {
         </div>
       </div>
 
-<div id="product-modal" class="fixed inset-0 z-50 hide bg-black/50 flex items-center justify-center">
-  <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
-    <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
-    <div class="flex flex-col md:flex-row">
-      <img id="modal-image" src="" alt="Produk" class="w-full md:w-1/2 h-64 object-cover">
-      <div class="p-4 flex flex-col gap-2" style="
-          width: -webkit-fill-available;
-      ">
-      <div class="flex justify-between items-center-safe">
-        <h3 id="modal-title" class="text-xl font-bold"></h3>
-        <p class="text-sm text-yellow-400 md:mr-8 mr-0">⭐ <span id="modal-rating"></span></p>
+      <div id="product-modal" class="fixed inset-0 z-50 hide bg-black/50 flex items-center justify-center">
+        <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
+          <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
+          <div class="flex flex-col md:flex-row">
+            <img id="modal-image" src="" alt="Produk" class="w-full md:w-1/2 h-64 object-cover">
+            <div class="p-4 flex flex-col gap-2" style="
+                width: -webkit-fill-available;
+            ">
+            <div class="flex justify-between items-center-safe">
+              <h3 id="modal-title" class="text-xl font-bold"></h3>
+              <p class="text-sm text-yellow-400 md:mr-8 mr-0">⭐ <span id="modal-rating"></span></p>
+              </div>
+              <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
+              <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
+              <button id="buy-button" class="mt-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                Beli Sekarang
+              </button>
+            </div>
+          </div>
         </div>
-        <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
-        <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
-        <button id="buy-button" class="mt-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-          Beli Sekarang
-        </button>
       </div>
-    </div>
-  </div>
-</div>
 
       <div id="loginModal" class="fixed hide inset-0 bg-black/70 z-50 flex justify-center items-center">
         <div class="bg-[#2a2c3b] text-white p-6 rounded-xl w-[90%] max-w-md text-center shadow-lg border border-purple-500">

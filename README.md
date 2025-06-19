@@ -46,7 +46,7 @@ LYRA adalah chatbot toko online pintar yang siap bantu kamu cari produk dengan g
 
 ### 🙋 Tanya Hal Lain
 
-> **Tanya:** "Cara jadi reseller gimana?", "Bisa kirim ke luar kota?"
+> **Tanya:** "Cara jadi reseller gimana?", "buka keranjang belanjaku", "Bisa kirim ke luar kota?"
 
 > **Hasil:** LYRA akan jawab secara umum atau kasih saran.
 
