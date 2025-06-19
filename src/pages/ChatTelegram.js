@@ -134,6 +134,34 @@ export default function ChatTelegram() {
       }
     });
 
+function handleCheckoutFlow() {
+  const { isEmpty, cartList, total } = cartManager.getCartSummary();
+  if (isEmpty) {
+    appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong. Tambahkan produk dulu yuk!' });
+    return;
+  }
+
+  showTypingBubble();
+  showTypingHeader();
+  setTimeout(() => {
+    appendMessage({
+      sender: 'lyra',
+      text: `Sebelum checkout, tolong isi data berikut ya:
+
+Nama:
+No WA aktif:
+Alamat lengkap:
+Kurir:
+Catatan:`
+    });
+    removeTypingBubble();
+    hideTypingHeader();
+  }, 800);
+
+  // Set flag supaya tahu user sedang dalam proses checkout
+  window.awaitingCheckoutForm = true;
+}
+
     sendBtn?.addEventListener('click', async () => {
       const text = input.value.trim();
       if (!text) return;
@@ -150,6 +178,10 @@ export default function ChatTelegram() {
         cartBtn?.click();
         return;
       }
+      if (/checkout|bayar/i.test(text)) {
+        return handleCheckoutFlow();
+      }
+
       if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
       showTypingBubble();
       showTypingHeader();
@@ -339,11 +371,21 @@ function openProductModal(product) {
           return;
         }
 
-        let total = 0;
-        const cartList = cartItems.map((p, i) => {
-          total += p.price;
-          return `${i + 1}. ${p.name} - Rp ${p.price.toLocaleString('id-ID')}`;
-        }).join('\\n');
+        const cartMap = {};
+        cartItems.forEach(p => {
+          if (!cartMap[p.slug]) {
+            cartMap[p.slug] = { ...p, qty: 1 };
+          } else {
+            cartMap[p.slug].qty += 1;
+          }
+        });
+
+        const cartList = Object.values(cartMap).map((item, i) => {
+          const subtotal = item.qty * item.price;
+          return `${i + 1}. ${item.name} x${item.qty} - Rp ${subtotal.toLocaleString('id-ID')}`;
+        }).join('\n');
+
+        const total = Object.values(cartMap).reduce((sum, item) => sum + (item.price * item.qty), 0);
 
         setTimeout(() => {
           showTypingBubble();
@@ -361,6 +403,50 @@ function openProductModal(product) {
 
       });
 
+
+// Di dalam handleChatMessage tambahkan ini sebelum AI intent detection
+
+  if (window.awaitingCheckoutForm && text.includes('Nama:')) {
+    window.awaitingCheckoutForm = false;
+
+    // Kirim ke Telegram webhook di sini jika mau
+    // Lalu munculkan Snap Midtrans
+    showTypingBubble();
+    showTypingHeader();
+    setTimeout(() => {
+      appendMessage({
+        sender: 'lyra',
+        text: 'Makasih! Sekarang aku sedang siapkan pembayaran kamu melalui Midtrans...'
+      });
+      removeTypingBubble();
+      hideTypingHeader();
+
+      // Simulasi Snap muncul
+      setTimeout(() => {
+        appendMessage({
+          sender: 'lyra',
+          html: '<button id="snapPayBtn" class="chat-btn bg-blue-600 text-white">Lanjut Bayar via Midtrans</button>'
+        });
+
+        setTimeout(() => {
+          document.getElementById('snapPayBtn')?.addEventListener('click', () => {
+            const token = 'DUMMY_SNAP_TOKEN';
+            snap.pay(token, {
+              onSuccess: () => {
+                appendMessage({ sender: 'lyra', text: 'Pembayaran sukses! 🎉 Terima kasih ya!' });
+                // Kirim notifikasi ke Telegram jika perlu
+              },
+              onClose: () => {
+                appendMessage({ sender: 'lyra', text: 'Pembayaran dibatalkan. Kalau butuh bantuan, bilang aja ya!' });
+              }
+            });
+          });
+        }, 100);
+
+      }, 1000);
+    }, 1000);
+    return;
+  }
       sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
         if (!target) return;
