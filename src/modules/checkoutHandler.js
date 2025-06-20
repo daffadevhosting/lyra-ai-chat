@@ -82,7 +82,7 @@ export async function handleCheckoutInput(text, cartItems) {
     }
 
     if (/lanjut/i.test(text)) {
-      respondWithTyping({ text: 'Siap! Aku lagi proses ke Midtrans ya...' });
+      respondWithTyping({ text: 'Siap! Aku lagi proses ke Xendit ya...' });
 
       try {
         await fetch('https://flat-river-1322.cbp629tmm2.workers.dev/', {
@@ -91,28 +91,44 @@ export async function handleCheckoutInput(text, cartItems) {
           body: JSON.stringify({ checkout: checkoutData, cart: cartItems })
         });
 
-        const res = await fetch('http://localhost:3000/api/checkout', {
+        const res = await fetch('https://weathered-pond-49ef.cbp629tmm2.workers.dev/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user: checkoutData, cart: cartItems })
         });
 
+
         if (!res.ok) {
-          console.error('Midtrans request failed:', res.status);
-          respondWithTyping({ text: 'Ups! Gagal kirim ke Midtrans 😓' });
+          console.error('Xendit request failed:', res.status);
+          respondWithTyping({ text: 'Ups! Gagal kirim ke Xendit 😓' });
           return true;
         }
 
         const json = await res.json();
 
-        if (!json.snapToken) {
-          respondWithTyping({ text: 'Midtrans tidak memberikan token 😥. Coba lagi ya.' });
-          return true;
-        }
+        if (json.invoice_url) {
+        const totalHarga = Object.values(cartItems).reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const itemList = Object.values(cartItems).map((item, i) => {
+        return `${i + 1}. ${item.name} x${item.qty} - Rp ${item.price * item.qty}`;
+        }).join('<br>');
 
         respondWithTyping({
-          html: `<a href="#" onclick="snap.pay('${json.snapToken}')" class="text-blue-400 underline">Klik di sini untuk bayar via Midtrans</a>`
+        sender: 'lyra',
+        html: `
+            <div class="text-sm leading-relaxed">
+            <strong>🧾 Pesanan kamu:</strong><br>
+            ${itemList}<br><br>
+            <strong>💰 Total: Rp ${totalHarga.toLocaleString('id-ID')}</strong><br><br>
+            <a href="${json.invoice_url}" target="_blank" class="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                👉 Klik di sini untuk bayar via Xendit
+            </a>
+            </div>
+        `
         });
+        } else {
+        respondWithTyping({ sender: 'lyra', text: 'Xendit tidak memberikan tautan pembayaran 😥. Coba lagi ya.' });
+        }
+
 
         checkoutStep = 0;
         checkoutData = {};

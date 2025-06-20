@@ -432,6 +432,22 @@ function generateProductTeaser(product) {
   return teasers[Math.floor(Math.random() * teasers.length)];
 }
 
+document.getElementById('openFaq')?.addEventListener('click', () => {
+  const modal = document.getElementById('faqModal');
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    modal.querySelector('div').classList.remove('opacity-0', 'scale-95');
+  }, 50);
+});
+
+document.getElementById('closeFaq')?.addEventListener('click', () => {
+  const modal = document.getElementById('faqModal');
+  modal.querySelector('div').classList.add('opacity-0', 'scale-95');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 300);
+});
+
 function openProductModal(product) {
   document.getElementById('modal-image').src = product.img || '/default.jpg';
   document.getElementById('modal-title').textContent = product.name;
@@ -588,9 +604,9 @@ return `
         <div class="relative bottom-0 left-0">
         <div class="mt-auto pt-4 border-t border-gray-700">
         <!-- Dark/Light mode toggle button -->
-        <button id="themeToggle" class="cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition mb-2">
+        <button id="openFaq" class="cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition mb-2">
         <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-question-mark-icon lucide-circle-question-mark"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
-          <span id="themeLabel">Faq</span>
+          <span>Bantuan & Faq</span>
         </button>
         <button id="toggleStyle" class=" cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
           <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -659,6 +675,40 @@ return `
        </div>
        </div>
 
+      <div id="faqModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-[#2c2e3e] text-white rounded-lg w-11/12 max-w-lg p-6 shadow-lg transform opacity-0 scale-95 transition-all duration-300">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold">❓ Pertanyaan Umum (FAQ)</h2>
+            <button id="closeFaq" class="text-gray-400 hover:text-white cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-x w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path d="M18 6 6 18"/><path d="M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="text-sm space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <div>
+              <strong>Apa itu L Y Я A?</strong>
+              <p>L Y Я A adalah asisten AI interaktif yang bisa bantu kamu cari produk, melakukan checkout, dan tanya-tanya seputar toko online ini.</p>
+            </div>
+            <div>
+              <strong>Bagaimana cara belanja?</strong>
+              <p>Kamu bisa klik produk di sidebar atau ketik nama produk di chat. Lalu tambahkan ke keranjang dan ketik <code>checkout</code>.</p>
+            </div>
+            <div>
+              <strong>Apa bisa bayar langsung?</strong>
+              <p>Ya! Setelah checkout, kamu bisa bayar lewat Midtrans atau Xendit melalui tautan pembayaran yang muncul di chat.</p>
+            </div>
+            <div>
+              <strong>Batasan user gratis?</strong>
+              <p>User anonim bisa chat maksimal 10x. Login untuk akses lebih banyak fitur!</p>
+            </div>
+            <div>
+              <strong>Data saya aman?</strong>
+              <p>Tentu! Data kamu tidak akan disalahgunakan. Kami hanya menyimpan informasi yang diperlukan untuk proses transaksi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="product-modal" class="fixed inset-0 z-50 hide  bg-black/50 backdrop-blur-sm flex items-center justify-center">
         <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
           <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>

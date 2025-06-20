@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pembayaran Berhasil | LYRA</title>
+  <link rel="icon" href="/logo.png" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-[#1d1f2b] text-white transition-colors duration-300 min-h-screen flex flex-col items-center justify-center p-6 text-center" style="background: #1d1f2b;">
+  <img src="/logo.png" alt="LYRA Logo" class="w-16 h-16 rounded-full border border-purple-500 mb-4" />
+  
+  <h1 class="text-2xl md:text-3xl font-bold text-green-400">🎉 Pembayaran Berhasil!</h1>
+  <p class="mt-2 text-sm md:text-base text-gray-300">Terima kasih sudah belanja di toko kami. Pesananmu sedang kami proses! 🚚</p>
+
+  <div class="mt-4">
+    <p class="text-sm text-gray-400">🧾 ID Pesanan:</p>
+    <p id="orderId" class="text-yellow-300 font-mono text-lg">memuat...</p>
+  </div>
+
+  <a href="/" class="mt-8 inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition">
+    Kembali ke Beranda
+  </a>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get("order_id");
+    document.getElementById("orderId").textContent = orderId || 'Tidak tersedia';
+  </script>
+</body>
+</html>
