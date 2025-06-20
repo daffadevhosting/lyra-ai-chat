@@ -10,7 +10,27 @@ import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { logout } from '../modules/authHandler.js';
 
-let modeLYRA = 'jualan';
+let modeLYRA = localStorage.getItem('modeLYRA') || 'jualan';
+const MODES = ['jualan', 'friendly', 'formal', 'genz'];
+let modeIndex = MODES.indexOf(modeLYRA);
+
+// Ubah label gaya bicara
+function updateModeLabel() {
+  const label = document.getElementById('modeLabel');
+  if (label && modeLYRA) {
+    label.textContent = modeLYRA.charAt(0).toUpperCase() + modeLYRA.slice(1);
+  }
+}
+
+// Ubah gaya bicara ke mode berikutnya
+function toggleModeLYRA() {
+  modeIndex = (modeIndex + 1) % MODES.length;
+  modeLYRA = MODES[modeIndex];
+  localStorage.setItem('modeLYRA', modeLYRA);
+  updateModeLabel();
+  showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
+}
+
 let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
@@ -53,8 +73,24 @@ async function sendWelcomeMessage(user) {
 
   respondWithTyping({ sender: 'lyra', text: randomText });
 
+function updateModeLabel() {
+  const label = document.getElementById('modeLabel');
+  if (label) {
+    label.textContent = modeLYRA.charAt(0).toUpperCase() + modeLYRA.slice(1);
+  }
+}
   // Tambahin sapaan follow-up
   setTimeout(() => {
+const toggleStyleBtn = document.getElementById('toggleStyle');
+if (toggleStyleBtn) {
+  toggleStyleBtn.addEventListener('click', () => {
+    modeIndex = (modeIndex + 1) % MODES.length;
+    modeLYRA = MODES[modeIndex];
+    localStorage.setItem('modeLYRA', modeLYRA);
+    updateModeLabel();
+    showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
+  });
+}
     respondWithTyping({
       sender: 'lyra',
       text: `Coba klik produk di sidebar atau langsung tanya apapun, ${name}. Aku standby! 🚀`,
@@ -115,8 +151,10 @@ function renderProductGridInChat(products) {
         if (product) cartItems.push(product);
       };
     });
+updateModeLabel();
   }, 50);
 }
+document.getElementById('toggleStyle')?.addEventListener('click', toggleModeLYRA);
 
 export default function ChatTelegram() {
   setTimeout(async () => {
@@ -364,7 +402,7 @@ function handleCheckoutFlow() {
           const catIntent = detectCategoryIntent(text);
           const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
           const styled = generateTone(rawResponse, modeLYRA);
-          respondWithTyping({ text: styled, product: matchedProduct });
+          respondWithTyping({ text: styled, modeLYRA, product: matchedProduct });
         } else {
           handleRequest(text); // fallback ke AI
         }
@@ -630,7 +668,7 @@ function openProductModal(product) {
       });
     }
   }, 50);
-
+  
   return `
     <div class="flex h-screen bg-white text-black dark:bg-[#1d1f2b] dark:text-white font-sans relative overflow-hidden">
       <!-- Sidebar overlay for mobile -->
@@ -651,6 +689,12 @@ function openProductModal(product) {
         <div id="sidebarProduct" class="flex-1 overflow-y-auto scrollbar-none space-y-2"></div>
         <div class="relative bottom-0 left-0">
         <div class="mt-auto pt-4 border-t border-gray-700">
+        <button id="toggleStyle" class=" cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
+          <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M12 20h9" /><path d="M12 4h9" /><path d="M4 9h16" /><path d="M4 15h16" />
+          </svg>
+          Gaya Bicara: <span id="modeLabel">jualan</span>
+        </button>
         <!-- Tombol Cheatsheet -->
         <button id="openCheatsheet" class="flex items-center cursor-pointer gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
           <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-book-open w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -772,6 +816,7 @@ function openProductModal(product) {
     </div>
   `;
 }
+
 function showGlobalAlert(message, type = 'info') {
   const alertBox = document.getElementById('globalAlert');
   if (!alertBox) return;
