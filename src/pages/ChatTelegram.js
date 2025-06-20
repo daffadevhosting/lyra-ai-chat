@@ -258,26 +258,17 @@ async function handleUserInput(text) {
   }
 
   // 💰 Checkout
+  const { isEmpty, cartList, total } = cartManager.getCartSummary();
 if (/checkout|bayar/i.test(text)) {
+  if (isEmpty) {
+    respondWithTyping({
+      sender: 'lyra',
+      text: `Keranjang nya kosong, nggak bisa checkout dulu 😅`,
+    });
+    showGlobalAlert('Keranjang kosong, nggak bisa checkout dulu 😅', 'error');
+    return;
+  }
   return startCheckout(cartManager.items);
-}
-
-// 📋 Format checkout (Global Scope)
-function parseCheckoutFormat(text) {
-  const requiredFields = ['nama', 'no wa', 'alamat', 'kurir'];
-  const lines = text.split('\n');
-  const data = {};
-
-  lines.forEach(line => {
-    const [key, value] = line.split(':').map(s => s.trim());
-    if (key && value) {
-      data[key.toLowerCase()] = value;
-    }
-  });
-
-  const isValid = requiredFields.every(field => data[field]);
-
-  return { isValid, data };
 }
 
   // 📦 Semua produk
