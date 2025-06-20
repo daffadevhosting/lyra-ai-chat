@@ -19,7 +19,6 @@ let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
 const groqKey = import.meta.env.VITE_GROQ_API_KEY;
-let cartItems = [];
 
 async function loadProductList() {
   const db = getFirestore();
@@ -134,13 +133,33 @@ function renderProductGridInChat(products) {
   document.head.appendChild(style);
 
   setTimeout(() => {
-    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-      btn.onclick = () => {
-        const slug = btn.dataset.slug;
-        const product = PRODUCT_LIST.find(p => p.slug === slug);
-        if (product) cartManager.addItem(product);
-      };
-    });
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+  btn.onclick = () => {
+    const slug = btn.dataset.slug;
+    const product = PRODUCT_LIST.find(p => p.slug === slug);
+    cartManager.addItem(product);
+        function updateCartBadge() {
+          const badge = document.getElementById('cartQtyBadge');
+          const qty = cartManager.items.length;
+
+          if (qty > 0) {
+            badge.textContent = qty;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+
+    if (product) {
+      cartManager.addItem(product);
+      updateCartBadge();
+      globalAlert(`1 ${product.name} masuk keranjang!`);
+    } else {
+      globalAlert('Produk tidak ditemukan 😓');
+    }
+  };
+    btn.dataset.bound = 'true';
+});
   }, 50);
 }
 document.getElementById('toggleStyle')?.addEventListener('click', toggleModeLYRA);
@@ -158,7 +177,6 @@ export default function ChatTelegram() {
     const sidebarProduct = document.getElementById('sidebarProduct');
 
     initAuth();
-    const db = getFirestore();
     await loadProductList();
 
     onLoginStateChanged((user) => {
@@ -183,7 +201,7 @@ export default function ChatTelegram() {
     });
     
 function handleCheckoutFlow() {
-  const { isEmpty, cartList, total } = cartManager.getCartSummary();
+  const { isEmpty } = cartManager.getCartSummary();
   if (isEmpty) {
     appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong. Tambahkan produk dulu yuk!' });
     return;
@@ -464,13 +482,6 @@ document.getElementById('closeCheatsheet')?.addEventListener('click', () => {
       `);
       sidebarProduct.innerHTML = items.join('');
 
-      const randomResponses = [
-        "Lihat nih, {{name}} ini best seller banget! 🤩",
-        "Wah, {{name}} ini emang bikin penasaran. Aku ceritain ya!",
-        "Cocok banget nih, {{name}} buat gaya kamu. 😉",
-        "Banyak yang suka {{name}} — kamu pasti juga bakal suka!",
-        "{{name}} ini punya fitur kece, langsung aja kita kulik!",
-      ];
 
       function getProductByName(name) {
         return PRODUCT_LIST.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
@@ -568,59 +579,52 @@ document.addEventListener('click', (e) => {
     const slug = e.target.dataset.slug;
     const product = PRODUCT_LIST.find(p => p.slug === slug);
     cartManager.addItem(product);
-    trackProductInteraction(slug, 'addedToCart');
-    showGlobalAlert(`${product.name} ditambahkan ke keranjang 🛒`, 'success');
+    trackProductInteraction(slug, 'addToCart');
+    globalAlert(`${product.name} ditambahkan ke keranjang 🛒`, 'success');
   }
 });
 
-      const cartBtn = document.getElementById('cartBtn');
-      cartBtn?.addEventListener('click', () => {
-        if (cartItems.length === 0) {
+const cartBtn = document.getElementById('cartBtn');
 
-        setTimeout(() => {
-          showTypingBubble();
-          showTypingHeader();
+cartBtn?.addEventListener('click', () => {
+  const { isEmpty, cartList, total } = cartManager.getCartSummary();
 
-        setTimeout(() => {
-          appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' });
-          removeTypingBubble();
-          hideTypingHeader();
-        }, 800 + Math.random() * 400);
-        }, 10);
-          return;
-        }
+  if (isEmpty) {
+    globalAlert('Keranjang masih kosong');
 
-        const cartMap = {};
-        cartItems.forEach(p => {
-          if (!cartMap[p.slug]) {
-            cartMap[p.slug] = { ...p, qty: 1 };
-          } else {
-            cartMap[p.slug].qty += 1;
-          }
+    setTimeout(() => {
+      showTypingBubble();
+      showTypingHeader();
+
+      setTimeout(() => {
+        appendMessage({ 
+          sender: 'lyra', 
+          text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' 
         });
 
-        const cartList = Object.values(cartMap).map((item, i) => {
-          const subtotal = item.qty * item.price;
-          return `${i + 1}. ${item.name} x${item.qty} - Rp ${subtotal.toLocaleString('id-ID')}`;
-        }).join('\n');
+        removeTypingBubble();
+        hideTypingHeader();
+      }, 800 + Math.random() * 400);
+    }, 10);
 
-        const total = Object.values(cartMap).reduce((sum, item) => sum + (item.price * item.qty), 0);
+    return;
+  }
 
-        setTimeout(() => {
-          showTypingBubble();
-          showTypingHeader();
+  setTimeout(() => {
+    showTypingBubble();
+    showTypingHeader();
 
-        setTimeout(() => {
-          appendMessage({
-            sender: 'lyra',
-            text: `Isi keranjang kamu:\n${cartList}\n\nTotal: Rp ${total.toLocaleString('id-ID')}`
-          });
-          removeTypingBubble();
-          hideTypingHeader();
-        }, 800 + Math.random() * 400);
-        }, 10);
-
+    setTimeout(() => {
+      appendMessage({
+        sender: 'lyra',
+        text: `Isi keranjang kamu:\n${cartList}\n\nTotal: Rp ${total.toLocaleString('id-ID')}`
       });
+
+      removeTypingBubble();
+      hideTypingHeader();
+    }, 800 + Math.random() * 400);
+  }, 10);
+});
 
   sidebarProduct.addEventListener('click', (e) => {
         const target = e.target.closest('.product-item');
@@ -751,7 +755,10 @@ return `
               <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
             </div>
           </div>
-        <button id="cartBtn" class="text-sm cursor-pointer bg-orange-500 text-white px-3 py-1 rounded">🛒 Lihat Keranjang</button>
+          <button id="cartBtn" class="relative text-sm cursor-pointer bg-orange-500 text-white px-3 py-3 rounded">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart-icon lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            <span id="cartQtyBadge" class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+          </button>
         </div>
 
         <div id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col min-h-0 scrollbar-none"></div>
@@ -829,6 +836,22 @@ return `
       <div id="globalAlert" class="fixed top-4 right-4 z-[1000] hidden px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 shadow-lg"></div>
     </div>
   `;
+}
+
+function globalAlert(msg) {
+  const alert = document.createElement('div');
+  alert.className = `
+    fixed bottom-4 left-4 bg-green-600 text-white 
+    px-4 py-2 rounded shadow-lg z-50 animate-fade-in
+  `;
+  alert.textContent = msg;
+
+  document.body.appendChild(alert);
+
+  setTimeout(() => {
+    alert.classList.add('opacity-0');
+    setTimeout(() => alert.remove(), 500);
+  }, 2500);
 }
 
 function showGlobalAlert(message, type = 'info') {
