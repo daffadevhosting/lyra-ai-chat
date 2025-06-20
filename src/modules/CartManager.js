@@ -1,36 +1,53 @@
 class CartManager {
   constructor() {
-    this.items = [];
+    this.items = {}; // key: slug, value: { product, qty }
     this.listeners = new Set();
   }
 
   addItem(product) {
-    if (!product) return;
-    this.items.push(product);
+    if (!product || !product.slug) return;
+
+    const key = product.slug;
+    if (this.items[key]) {
+      this.items[key].qty += 1;
+    } else {
+      this.items[key] = {
+        ...product,
+        qty: 1,
+      };
+    }
+
+    this.notifyListeners();
+  }
+
+  removeBySlug(slug) {
+    if (this.items[slug]) {
+      delete this.items[slug];
+      this.notifyListeners();
+    }
+  }
+
+  clear() {
+    this.items = {};
     this.notifyListeners();
   }
 
   getCartSummary() {
-    const cartMap = {};
-    this.items.forEach(p => {
-      if (!cartMap[p.slug]) {
-        cartMap[p.slug] = { ...p, qty: 1 };
-      } else {
-        cartMap[p.slug].qty += 1;
-      }
-    });
+    const values = Object.values(this.items);
 
-    const cartList = Object.values(cartMap).map((item, i) => {
+    const cartList = values.map((item, i) => {
       const subtotal = item.qty * item.price;
-      return `${i + 1}. ${item.name} x${item.qty} - Rp ${subtotal.toLocaleString('id-ID')}`;
+      return `${i + 1}. ${item.name} x${item.qty} – Rp ${subtotal.toLocaleString('id-ID')}`;
     }).join('\n');
 
-    const total = Object.values(cartMap).reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const total = values.reduce((sum, item) => sum + (item.price * item.qty), 0);
 
     return {
-      isEmpty: this.items.length === 0,
+      isEmpty: values.length === 0,
       cartList,
-      total
+      total,
+      qty: values.reduce((sum, item) => sum + item.qty, 0),
+      items: values,
     };
   }
 
@@ -43,19 +60,8 @@ class CartManager {
   }
 
   notifyListeners() {
-    this.listeners.forEach(callback => callback(this.getCartSummary()));
-  }
-
-  clear() {
-    this.items = [];
-    this.notifyListeners();
-  }
-
-  // 🔥 Tambahan method baru
-  removeBySlug(slug) {
-    const oldLen = this.items.length;
-    this.items = this.items.filter(p => p.slug !== slug);
-    if (this.items.length !== oldLen) this.notifyListeners();
+    const summary = this.getCartSummary();
+    this.listeners.forEach(callback => callback(summary));
   }
 }
 

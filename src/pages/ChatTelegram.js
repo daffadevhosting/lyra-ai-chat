@@ -82,7 +82,7 @@ if (toggleStyleBtn) {
 }
     respondWithTyping({
       sender: 'lyra',
-      text: `Coba klik produk di sidebar atau langsung tanya apapun, ${name}. Aku standby! 🚀`,
+      text: `Coba klik produk di sidebar atau langsung ketik "minta katalog nya" ke LYЯA. Tanya apapun, ${name}. Aku standby! 🚀`,
     });
   }, 1200);
 }
@@ -97,16 +97,12 @@ function respondWithTyping({ text, product = null, replyTo = null }) {
     hideTypingHeader();
   }, 1000 + Math.random() * 400); // biar dramatis
 }
-document.getElementById('atc')?.addEventListener('click', () => {
-  handleCartView(); // fungsi utama
-  showGlobalAlert('📦 Berhasil masuk keranjang kamu', 'info');
-});
 
 function renderProductGridInChat(products) {
   const html = `
     <div class=\"grid grid-cols-2 gap-2 animate-fade-in\">
       ${products.map(p => `
-        <div class="bg-gray-700 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
+        <div class="bg-gray-700 border border-cyan-400 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
           <img src="${p.img}" class="w-full h-20 object-cover rounded" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
@@ -133,22 +129,24 @@ function renderProductGridInChat(products) {
   document.head.appendChild(style);
 
   setTimeout(() => {
+function updateCartBadge() {
+  const badge = document.getElementById('cartQtyBadge');
+  const { qty } = cartManager.getCartSummary();
+
+  if (qty > 0) {
+    badge.textContent = qty;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
 document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-  btn.onclick = () => {
+  if (btn.dataset.bound) return; // hindari binding ganda
+
+  btn.addEventListener('click', () => {
     const slug = btn.dataset.slug;
     const product = PRODUCT_LIST.find(p => p.slug === slug);
-    cartManager.addItem(product);
-        function updateCartBadge() {
-          const badge = document.getElementById('cartQtyBadge');
-          const qty = cartManager.items.length;
-
-          if (qty > 0) {
-            badge.textContent = qty;
-            badge.classList.remove('hidden');
-          } else {
-            badge.classList.add('hidden');
-          }
-        }
 
     if (product) {
       cartManager.addItem(product);
@@ -157,9 +155,11 @@ document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
     } else {
       globalAlert('Produk tidak ditemukan 😓');
     }
-  };
-    btn.dataset.bound = 'true';
+  });
+
+  btn.dataset.bound = 'true';
 });
+
   }, 50);
 }
 document.getElementById('toggleStyle')?.addEventListener('click', toggleModeLYRA);
@@ -179,7 +179,20 @@ export default function ChatTelegram() {
     initAuth();
     await loadProductList();
 
-    onLoginStateChanged((user) => {
+sendBtn?.addEventListener('click', () => {
+  const text = input.value.trim();
+  if (text) handleUserInput(text);
+});
+
+input?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (text) handleUserInput(text);
+  }
+});
+
+onLoginStateChanged((user) => {
       if (user && loginBtn) {
         const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
         loginBtn.textContent = `Halo, ${name}`;
@@ -191,26 +204,19 @@ export default function ChatTelegram() {
         sendWelcomeMessage(null);
         logoutBtn?.classList.add('hidden');
       }
-    });
-
-    input?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendBtn?.click();
-      }
-    });
+});
     
 function handleCheckoutFlow() {
   const { isEmpty } = cartManager.getCartSummary();
   if (isEmpty) {
-    appendMessage({ sender: 'lyra', text: 'Keranjangmu masih kosong. Tambahkan produk dulu yuk!' });
+    respondWithTyping({ sender: 'lyra', text: 'Keranjangmu masih kosong. Tambahkan produk dulu yuk!' });
     return;
   }
 
   showTypingBubble();
   showTypingHeader();
   setTimeout(() => {
-    appendMessage({
+    respondWithTyping({
       sender: 'lyra',
       text: `Sebelum checkout, tolong isi data berikut ya:
 
@@ -226,232 +232,146 @@ function handleCheckoutFlow() {
 
           // Set flag supaya tahu user sedang dalam proses checkout
           window.awaitingCheckoutForm = true;
+}
+
+async function handleUserInput(text) {
+  appendMessage({ sender: 'user', text }); // ⬅️ hanya di sini, biar ga dobel
+  input.value = '';
+
+  const uid = getCurrentUID();
+  const isGuest = !uid;
+
+  if (isGuest && chatCount >= LIMIT) return showLimitModal();
+  if (isGuest) chatCount++;
+
+  // 📦 Keranjang
+  if (/keranjang|lihat keranjang|cart/i.test(text)) {
+    cartBtn?.click();
+    return;
+  }
+
+  // 🗑️ Hapus dari keranjang
+  if (/hapus/i.test(text)) {
+    const keyword = text.replace(/hapus/i, '').trim().toLowerCase();
+    const indexMatch = text.match(/ke-?(\d+)/i);
+    if (indexMatch) {
+      const index = parseInt(indexMatch[1], 10) - 1;
+      const allItems = cartManager.items;
+      if (allItems[index]) {
+        const removed = allItems[index];
+        // Buat array baru tanpa item di index tersebut
+        cartManager.items = allItems.filter((_, i) => i !== index);
+        cartManager.notifyListeners();
+        appendMessage({ sender: 'lyra', text: `Oke, aku hapus ${removed.name} dari keranjang.` });
+      } else {
+        appendMessage({ sender: 'lyra', text: `Item nomor ${index + 1} nggak ditemukan di keranjang.` });
+      }
+  } else {
+      const match = PRODUCT_LIST.find(p => p.name.toLowerCase().includes(keyword));
+      if (match) {
+        cartManager.removeBySlug(match.slug);
+        appendMessage({ sender: 'lyra', text: `Item "${match.name}" sudah dihapus dari keranjang.` });
+      } else {
+        appendMessage({ sender: 'lyra', text: `Item "${keyword}" nggak aku temuin di keranjang.` });
+      }
     }
+    return;
+  }
 
-    sendBtn?.addEventListener('click', async () => {
-      const text = input.value.trim();
-      if (!text) return;
+  // 💰 Checkout
+if (/checkout|bayar/i.test(text)) {
+    return handleCheckoutFlow();
+}
 
-      appendMessage({ sender: 'user', text });
-      input.value = '';
+// 📋 Format checkout (Global Scope)
+function parseCheckoutFormat(text) {
+  const requiredFields = ['nama', 'no wa', 'alamat', 'kurir'];
+  const lines = text.split('\n');
+  const data = {};
 
-      const uid = getCurrentUID();
-      const isGuest = !uid;
+  lines.forEach(line => {
+    const [key, value] = line.split(':').map(s => s.trim());
+    if (key && value) {
+      data[key.toLowerCase()] = value;
+    }
+  });
 
-      if (isGuest && chatCount >= LIMIT) return showLimitModal();
-      if (isGuest) chatCount++;
-      if (/keranjang|lihat keranjang|cart/i.test(text)) {
-        cartBtn?.click();
-        return;
-      }
-      if (/hapus/i.test(text)) {
-      const keyword = text.replace(/hapus/i, '').trim().toLowerCase();
-      const indexMatch = text.match(/ke-?(\d+)/i);
+  const isValid = requiredFields.every(field => data[field]);
 
-      const { items } = cartManager; // akses array internal
+  return { isValid, data };
+}
 
-      if (indexMatch) {
-        const index = parseInt(indexMatch[1], 10) - 1;
+  // 📦 Semua produk
+if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
+    showTypingBubble();
+    showTypingHeader();
+    setTimeout(() => {
+      appendMessage({ sender: 'lyra', text: '📦 Ini semua produk dari toko aku:', replyTo: text });
+      removeTypingBubble();
+      hideTypingHeader();
+    }, 600 + Math.random() * 400);
 
-        if (items[index]) {
-          const removedItem = items.splice(index, 1)[0];
-          cartManager.notifyListeners(); // supaya update badge/dll
-          appendMessage({ sender: 'lyra', text: `Oke, aku hapus ${removedItem.name} dari keranjang.` });
-        } else {
-          appendMessage({ sender: 'lyra', text: `Item nomor ${index + 1} nggak ditemukan di keranjang.` });
-        }
+    setTimeout(() => {
+      renderProductGridInChat(PRODUCT_LIST);
+    }, 1200 + Math.random() * 400);
+    return;
+}
 
-      } else {
-        const match = PRODUCT_LIST.find(p => p.name.toLowerCase().includes(keyword));
+  // 🤖 AI response (intent + gaya bicara)
+  const result = await detectIntentAndRespond(text);
 
-        if (match) {
-          const oldCount = items.length;
-          cartManager.items = items.filter(p => p.slug !== match.slug);
-          if (cartManager.items.length < oldCount) {
-            cartManager.notifyListeners();
-            appendMessage({ sender: 'lyra', text: `Item "${match.name}" sudah dihapus dari keranjang.` });
-          } else {
-            appendMessage({ sender: 'lyra', text: `Item "${match.name}" nggak ditemukan di keranjang.` });
-          }
-        } else {
-          appendMessage({ sender: 'lyra', text: `Item "${keyword}" nggak aku temuin di keranjang.` });
-        }
-      }
+  const personaReply = generatePersonaResponse(text);
+  if (personaReply) {
+    respondWithTyping({ text: personaReply });
+    return;
+  }
 
+  if (result.intent === 'all') {
+    respondWithTyping({ text: result.label });
+    PRODUCT_LIST.forEach(p => respondWithTyping({ product: p }));
+  } else if (result.intent === 'best') {
+    const top = [...PRODUCT_LIST].sort((a, b) => b.sold - a.sold)[0];
+    respondWithTyping({ text: result.label, product: top });
+  } else if (result.intent === 'rating') {
+    const best = [...PRODUCT_LIST].sort((a, b) => b.rating - a.rating)[0];
+    respondWithTyping({ text: result.label, product: best });
+  } else if (result.intent === 'match') {
+    respondWithTyping({ text: result.label, product: result.product });
+  } else {
+    const matchedProduct = PRODUCT_LIST.find(p => text.toLowerCase().includes(p.name.toLowerCase()));
+    if (matchedProduct) {
+      const catIntent = detectCategoryIntent(text);
+      const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
+      const styled = generateTone(rawResponse, modeLYRA);
+      respondWithTyping({ text: styled, product: matchedProduct });
+    } else {
+      handleRequest(text); // fallback ke GPT
+    }
+  }
+}
 
-      return;
-      }
-      if (/checkout|bayar/i.test(text)) {
-        return handleCheckoutFlow();
-      }
-      if (window.awaitingCheckoutForm && text.includes('Nama:')) {
-        window.awaitingCheckoutForm = false;
-
-      const isCheckoutFormat = text.includes('Nama:') && text.includes('Alamat');
-
-      if (isCheckoutFormat) {
-        const data = {};
-        text.split('\n').forEach(line => {
-          const [key, value] = line.split(':').map(s => s.trim());
-          if (key && value) data[key.toLowerCase()] = value;
-        });
-
-        // Validasi minimal
-        if (!data['nama'] || !data['alamat'] || !data['no wa aktif']) {
-          appendMessage({ sender: 'lyra', text: 'Format belum lengkap. Pastikan semua data sudah diisi ya!' });
-          return;
-        }
-
-        const cartData = cartManager.items.map(p => ({
-          name: p.name,
-          price: p.price,
-          qty: 1, // Atau lo bisa hitung qty manual pakai cartSummary kalau perlu
-          slug: p.slug,
-        }));
-
-        // Kirim ke Telegram
-        fetch('https://flat-river-1322.cbp629tmm2.workers.dev/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkout: data, cart: cartData })
-        });
-
-        // Kirim ke backend Midtrans
-        fetch('/api/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: data, cart: cartData })
-        })
-        .then(res => res.json())
-        .then(json => {
-          if (json.snapToken) {
-            snap.pay(json.snapToken);
-          } else {
-            appendMessage({ sender: 'lyra', text: 'Gagal membuat link pembayaran. Coba lagi ya!' });
-          }
-        })
-        .catch(() => {
-          appendMessage({ sender: 'lyra', text: 'Ups! Terjadi kesalahan saat proses checkout.' });
-        });
-
-        appendMessage({ sender: 'lyra', text: 'Checkout berhasil dikirim. Silakan lanjut ke pembayaran ya 😊' });
-        return;
-      }
-
-        // Lalu munculkan Snap Midtrans
-        showTypingBubble();
-        showTypingHeader();
-        setTimeout(() => {
-          appendMessage({
-            sender: 'lyra',
-            text: 'Makasih! Sekarang aku sedang siapkan pembayaran kamu melalui Midtrans...'
-          });
-          removeTypingBubble();
-          hideTypingHeader();
-
-          // Simulasi Snap muncul
-          setTimeout(() => {
-            appendMessage({
-              sender: 'lyra',
-              html: '<button id="snapPayBtn" class="chat-btn bg-blue-600 text-white">Lanjut Bayar via Midtrans</button>'
-            });
-
-            setTimeout(() => {
-              document.getElementById('snapPayBtn')?.addEventListener('click', () => {
-                const token = 'DUMMY_SNAP_TOKEN';
-                snap.pay(token, {
-                  onSuccess: () => {
-                    appendMessage({ sender: 'lyra', text: 'Pembayaran sukses! 🎉 Terima kasih ya!' });
-                    // Kirim notifikasi ke Telegram jika perlu
-                  },
-                  onClose: () => {
-                    appendMessage({ sender: 'lyra', text: 'Pembayaran dibatalkan. Kalau butuh bantuan, bilang aja ya!' });
-                  }
-                });
-              });
-            }, 100);
-
-          }, 1000);
-        }, 1000);
-        return;
-      }
-
-      if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
-      showTypingBubble();
-      showTypingHeader();
-
-      setTimeout(() => {
-        appendMessage({
-          sender: 'lyra',
-          text: '📦 Ini semua produk dari toko aku:',
-          replyTo: text
-        });
-        removeTypingBubble();
-        hideTypingHeader();
-      }, 600 + Math.random() * 400);
-
-      setTimeout(() => {
-        renderProductGridInChat(PRODUCT_LIST);
-      }, 1200 + Math.random() * 400);
-        return;
-      }
-
-      // 🧠 AI-based intent detection
-      const result = await detectIntentAndRespond(text);
-
-      // 🔍 Cek apakah pertanyaan tentang LYRA sendiri
-      const personaReply = generatePersonaResponse(text);
-      if (personaReply) {
-        respondWithTyping({ text: personaReply });
-        return;
-      }
-
-      if (result.intent === 'all') {
-        respondWithTyping({ text: result.label });
-        PRODUCT_LIST.forEach(p => respondWithTyping({ product: p }));
-      } else if (result.intent === 'best') {
-        const top = [...PRODUCT_LIST].sort((a, b) => b.sold - a.sold)[0];
-        respondWithTyping({ text: result.label, product: top });
-      } else if (result.intent === 'rating') {
-        const best = [...PRODUCT_LIST].sort((a, b) => b.rating - a.rating)[0];
-        respondWithTyping({ text: result.label, product: best });
-      } else if (result.intent === 'match') {
-        respondWithTyping({ text: result.label, product: result.product });
-      } else {
-        const matchedProduct = PRODUCT_LIST.find(p => text.toLowerCase().includes(p.name.toLowerCase()));
-        if (matchedProduct) {
-          const catIntent = detectCategoryIntent(text);
-          const rawResponse = generateCategoryResponse(catIntent, matchedProduct);
-          const styled = generateTone(rawResponse, modeLYRA);
-          respondWithTyping({ text: styled, modeLYRA, product: matchedProduct });
-        } else {
-          handleRequest(text); // fallback ke AI
-        }
-      }
-
-    });
-
-    logoutBtn?.addEventListener('click', async () => {
-      await logout();
-      window.location.href = '/';
-    });
+logoutBtn?.addEventListener('click', async () => {
+  await logout();
+  window.location.href = '/';
+});
     
 const cheatsheetModal = document.getElementById('cheatsheet-modal');
 const cheatsheetContent = document.getElementById('cheatsheet-content');
 
 document.getElementById('openCheatsheet')?.addEventListener('click', () => {
   cheatsheetModal.classList.remove('hidden');
+  cheatsheetModal.classList.add('flex');
   setTimeout(() => {
     cheatsheetContent.classList.remove('opacity-0', 'scale-95');
     cheatsheetContent.classList.add('opacity-100', 'scale-100');
   }, 10);
 });
-
 document.getElementById('closeCheatsheet')?.addEventListener('click', () => {
   cheatsheetContent.classList.remove('opacity-100', 'scale-100');
   cheatsheetContent.classList.add('opacity-0', 'scale-95');
   setTimeout(() => {
     cheatsheetModal.classList.add('hidden');
+    cheatsheetModal.classList.remove('flex');
   }, 200);
 });
 
@@ -480,58 +400,58 @@ document.getElementById('closeCheatsheet')?.addEventListener('click', () => {
               </div>
             </div>
       `);
-      sidebarProduct.innerHTML = items.join('');
+sidebarProduct.innerHTML = items.join('');
 
 
-      function getProductByName(name) {
-        return PRODUCT_LIST.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
-      }
+function getProductByName(name) {
+  return PRODUCT_LIST.find(p => p.name.toLowerCase().includes(name.toLowerCase()));
+}
 
-      function getRandomResponse(productName) {
-        const product = getProductByName(productName);
-        const priceFormatted = product?.price
-          ? `Rp ${product.price.toLocaleString('id-ID')}`
-          : 'harga tidak tersedia';
+function getRandomResponse(productName) {
+  const product = getProductByName(productName);
+  const priceFormatted = product?.price
+  ? `Rp ${product.price.toLocaleString('id-ID')}`
+  : 'harga tidak tersedia';
 
-        if (!product) {
-          return `Hmm... aku belum nemu produk bernama "${productName}". Mau coba cari yang lain?`;
-        }
-        if (product.tags?.includes('gratis-ongkir')) {
-          responses.push(`Khusus hari ini, ${product.name} bebas ongkir loh! 😍`);
-        }
-        const templates = [
-          `kamu pengen ${product.name} ini, ini salah satu andalan, harganya ${priceFormatted} aja.`,
-          `Kamu pasti suka ${product.name}, dan kabar baiknya: cuma ${priceFormatted}!`,
-          `Harga ${product.name}? ${priceFormatted}. Worth it banget untuk rasanya!`,
-          `Mau yang bikin anget? ${product.name} jawabannya. Harga: ${priceFormatted}.`,
-        ];
+  if (!product) {
+  return `Hmm... aku belum nemu produk bernama "${productName}". Mau coba cari yang lain?`;
+}
+  if (product.tags?.includes('gratis-ongkir')) {
+  responses.push(`Khusus hari ini, ${product.name} bebas ongkir loh! 😍`);
+  }
+  const templates = [
+  `kamu pengen ${product.name} ini, ini salah satu andalan, harganya ${priceFormatted} aja.`,
+  `Kamu pasti suka ${product.name}, dan kabar baiknya: cuma ${priceFormatted}!`,
+  `Harga ${product.name}? ${priceFormatted}. Worth it banget untuk rasanya!`,
+  `Mau yang bikin anget? ${product.name} jawabannya. Harga: ${priceFormatted}.`,
+  ];
 
-        return templates[Math.floor(Math.random() * templates.length)];
-      }
+  return templates[Math.floor(Math.random() * templates.length)];
+}
 
-      const userPrompts = [
-        "Ceritain dong soal {{name}}.",
-        "Eh, ini {{name}} kayaknya menarik, ya?",
-        "{{name}} ini produk apa sih?",
-        "Gua penasaran deh sama {{name}}.",
-        "Ini {{name}} kegunaannya apa, bre?",
-      ];
-      function getRandomUserPrompt(name) {
-        const prompt = userPrompts[Math.floor(Math.random() * userPrompts.length)];
-        return prompt.replace('{{name}}', name);
-      }
+const userPrompts = [
+  "Ceritain dong soal {{name}}.",
+  "Eh, ini {{name}} kayaknya menarik, ya?",
+  "{{name}} ini produk apa sih?",
+  "Gua penasaran deh sama {{name}}.",
+  "Ini {{name}} kegunaannya apa, bre?",
+  ];
+function getRandomUserPrompt(name) {
+  const prompt = userPrompts[Math.floor(Math.random() * userPrompts.length)];
+  return prompt.replace('{{name}}', name);
+}
 
-      function generateProductTeaser(product) {
-      const desc = product.description || 'produk menarik dari kami';
-      const teasers = [
-        `✨ ${product.name} hadir dengan ${desc.slice(0, 60)}...`,
-        `🎯 Ini dia highlight dari ${product.name}: ${desc.slice(0, 70)}...`,
-        `🔍 Sekilas tentang ${product.name}: ${desc.slice(0, 65)}...`,
-        `💡 ${product.name} punya fitur utama: ${desc.slice(0, 60)}...`,
-        `🔥 Kepoin ${product.name}, katanya sih: ${desc.slice(0, 70)}...`,
-      ];
-      return teasers[Math.floor(Math.random() * teasers.length)];
-      }
+function generateProductTeaser(product) {
+  const desc = product.description || 'produk menarik dari kami';
+  const teasers = [
+  `✨ ${product.name} hadir dengan ${desc.slice(0, 60)}...`,
+  `🎯 Ini dia highlight dari ${product.name}: ${desc.slice(0, 70)}...`,
+  `🔍 Sekilas tentang ${product.name}: ${desc.slice(0, 65)}...`,
+  `💡 ${product.name} punya fitur utama: ${desc.slice(0, 60)}...`,
+  `🔥 Kepoin ${product.name}, katanya sih: ${desc.slice(0, 70)}...`,
+  ];
+  return teasers[Math.floor(Math.random() * teasers.length)];
+}
 
 function openProductModal(product) {
   document.getElementById('modal-image').src = product.img || '/default.jpg';
@@ -568,21 +488,6 @@ function openProductModal(product) {
       modal.classList.add('hide');
     }, 300);
   };
-
-document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('quick-detail')) {
-    const slug = e.target.dataset.slug;
-    const product = PRODUCT_LIST.find(p => p.slug === slug);
-    openProductModal(product);
-  }
-  if (e.target.classList.contains('quick-cart')) {
-    const slug = e.target.dataset.slug;
-    const product = PRODUCT_LIST.find(p => p.slug === slug);
-    cartManager.addItem(product);
-    trackProductInteraction(slug, 'addToCart');
-    globalAlert(`${product.name} ditambahkan ke keranjang 🛒`, 'success');
-  }
-});
 
 const cartBtn = document.getElementById('cartBtn');
 
@@ -797,7 +702,7 @@ return `
         </div>
       </div>
 
-      <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center">
+      <div id="cheatsheet-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden items-center justify-center">
         <div class="bg-[#2c2e3e] rounded-lg max-w-md w-11/12 p-6 shadow-lg transform opacity-0 scale-95 transition-all duration-300" id="cheatsheet-content">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-bold">📘 Cheatsheet L Y Я A</h2>
@@ -815,7 +720,6 @@ return `
             <li><code>hapus (nama produk)</code> – hapus item keranjang</li>
             <li><code>Nama: ...</code> – kirim data checkout <strong>(onworking)</strong></li>
             <li><code>aku mau bayar</code> – Snap midtrans <strong>(onworking)</strong></li>
-            <li><code>ubah gaya ke genz</code> – ubah gaya bicara L Y Я A</li>
             <li><code>kamu siapa?</code> – kenalan sama L Y Я A 😄</li>
             <li><code>motto kamu apa</code> – tanya motto hidup LYRA</li>
             <li><code>apa itu LYRA?</code> – tanya tentang L Y Я A</li>
@@ -915,4 +819,14 @@ async function handleRequest(prompt) {
     chatBox.lastChild?.remove();
     appendMessage({ sender: 'lyra', text: '😵 LYRA lagi error. Coba lagi nanti ya.' });
   }
+}
+const textarea = document.getElementById('chatInput');
+if (textarea) {
+  textarea.setAttribute('style', 'height:' + (textarea.scrollHeight) + 'px;overflow-y:hidden;');
+  textarea.addEventListener('input', autoResize, false);
+}
+
+function autoResize() {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
 }
