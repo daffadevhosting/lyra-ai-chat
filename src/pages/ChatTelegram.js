@@ -1,4 +1,4 @@
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, updateDoc, increment, setDoc } from 'firebase/firestore';
 import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generatePersonaResponse, generateTone } from '../modules/intentHandler.js';
 import {
   appendMessage,
@@ -14,23 +14,6 @@ let modeLYRA = localStorage.getItem('modeLYRA') || 'jualan';
 const MODES = ['jualan', 'friendly', 'formal', 'genz'];
 let modeIndex = MODES.indexOf(modeLYRA);
 
-// Ubah label gaya bicara
-function updateModeLabel() {
-  const label = document.getElementById('modeLabel');
-  if (label && modeLYRA) {
-    label.textContent = modeLYRA.charAt(0).toUpperCase() + modeLYRA.slice(1);
-  }
-}
-
-// Ubah gaya bicara ke mode berikutnya
-function toggleModeLYRA() {
-  modeIndex = (modeIndex + 1) % MODES.length;
-  modeLYRA = MODES[modeIndex];
-  localStorage.setItem('modeLYRA', modeLYRA);
-  updateModeLabel();
-  showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
-}
-
 let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
@@ -42,7 +25,12 @@ async function loadProductList() {
   const snapshot = await getDocs(collection(db, 'products'));
   PRODUCT_LIST = snapshot.docs.map(doc => doc.data());
 }
-
+async function trackProductInteraction(slug, type = 'viewed') {
+  const db = getFirestore();
+  const ref = doc(db, 'analytics', slug);
+  await setDoc(ref, { viewed: 0, addedToCart: 0 }, { merge: true });
+  await updateDoc(ref, { [type]: increment(1) });
+}
 function getGreetingByTime() {
   const now = new Date();
   const hour = now.getHours();
@@ -88,6 +76,7 @@ if (toggleStyleBtn) {
     modeLYRA = MODES[modeIndex];
     localStorage.setItem('modeLYRA', modeLYRA);
     updateModeLabel();
+    respondWithTyping({ sender: 'lyra', text: `Oke! Gaya bicara ku sekarang: ${modeLYRA}` });
     showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
   });
 }
@@ -222,14 +211,14 @@ function handleCheckoutFlow() {
     }
 
     sendBtn?.addEventListener('click', async () => {
-      const text = input.value.trim();
-      if (!text) return;
     const styleMatch = text.match(/(ubah|ganti) (gaya|tone|suara) (ke|jadi) (formal|genz|jualan|friendly)/i);
     if (styleMatch) {
       modeLYRA = styleMatch[4].toLowerCase();
       appendMessage({ sender: 'lyra', text: `Gaya ngobrol diganti jadi *${modeLYRA}* ya! 😉` });
       return;
     }
+      const text = input.value.trim();
+      if (!text) return;
 
       appendMessage({ sender: 'user', text });
       input.value = '';
