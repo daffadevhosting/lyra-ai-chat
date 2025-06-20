@@ -10,7 +10,7 @@ L Y Я A adalah asisten AI modern berbasis web yang dirancang untuk membantu pen
 |--------------------------------|
 |![](./src/assets/lyra-ai.png)|
 
-[![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lira-ai-nine.vercel.app)
+[![Vercel](https://img.shields.io/badge/Live%20Demo-Vercel-black?logo=vercel)](https://lyra-ai-nine.vercel.app)
 
 # 📖 Panduan Cepat Pengguna L Y Я A
 
@@ -55,7 +55,7 @@ L Y Я A adalah chatbot toko online pintar yang siap bantu kamu cari produk deng
 ## ⚠️ Batasan Fitur
 
 * Tanpa login: Maksimal 10 chat/hari.
-* Login Google: 50 chat/hari.
+* Login User: 50 chat/hari.
 * Ingin akses penuh? Hubungi admin!
 
 ---
@@ -79,7 +79,7 @@ Selamat berbelanja bareng L Y Я A! 💜
 - 💬 UI gaya Telegram dengan bubble reply yang real
 - 🛍️ Tampilkan produk otomatis berdasarkan keyword
 - 🔐 Login Google via Firebase Auth
-- 🚫 Limitasi guest user (3 chat gratis)
+- 🚫 Limitasi guest user (10 chat gratis)
 - 🪪 Modal login muncul otomatis saat kena limit
 - 🖼️ Produk tampil dalam bubble dengan gambar + tombol beli
 - 🖱️ Tombol kirim & login pakai icon lucide/heroicons
@@ -136,9 +136,9 @@ src/
 
  - Text-to-speech (suara L Y Я A cewek)
 
- - Sistem donasi via Xendit
+ - Sistem payment via Midtrans (on Working)
 
- - Checkout produk langsung via QR code
+ - Checkout produk langsung via AI
 
  ## 💻 Demo
 
@@ -146,7 +146,7 @@ src/
 |--------------------------------|
 |![](./src/assets/lyra-mob.png)|
 
-[L Y Я A AI-shop](https://lira-ai-nine.vercel.app) Deployed via vercel
+[L Y Я A AI-shop](https://lyra-ai-nine.vercel.app) Deployed via vercel
 
 “L Y Я A bukan sekadar AI, dia CS toko online yang ngerti bahasa manusia dan bisa closing jualan.” – Kita 😎
 

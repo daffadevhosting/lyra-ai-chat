@@ -9,6 +9,7 @@ import {
 import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { cartManager} from '../modules/CartManager.js';
+import { startCheckout, handleCheckoutInput } from '../modules/checkoutHandler.js';
 import { logout } from '../modules/authHandler.js';
 
 let modeLYRA = localStorage.getItem('modeLYRA') || 'jualan';
@@ -19,6 +20,8 @@ let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
 const groqKey = import.meta.env.VITE_GROQ_API_KEY;
+let checkoutStep = 0;
+let checkoutData = {};
 
 async function loadProductList() {
   const db = getFirestore();
@@ -39,6 +42,17 @@ function getGreetingByTime() {
   if (hour >= 11 && hour < 15) return '☀️ Selamat siang';
   if (hour >= 15 && hour < 18) return '🌇 Selamat sore';
   return '🌙 Selamat malam';
+}
+
+function respondWithTyping({ text, product = null, replyTo = null }) {
+  showTypingBubble();
+  showTypingHeader();
+
+  setTimeout(() => {
+    appendMessage({ sender: 'lyra', text, product, replyTo });
+    removeTypingBubble();
+    hideTypingHeader();
+  }, 1000 + Math.random() * 400); // biar dramatis
 }
 
 let hasWelcomed = false;
@@ -85,17 +99,6 @@ if (toggleStyleBtn) {
       text: `Coba klik produk di sidebar atau langsung ketik "minta katalog nya" ke LYЯA. Tanya apapun, ${name}. Aku standby! 🚀`,
     });
   }, 1200);
-}
-
-function respondWithTyping({ text, product = null, replyTo = null }) {
-  showTypingBubble();
-  showTypingHeader();
-
-  setTimeout(() => {
-    appendMessage({ sender: 'lyra', text, product, replyTo });
-    removeTypingBubble();
-    hideTypingHeader();
-  }, 1000 + Math.random() * 400); // biar dramatis
 }
 
 function renderProductGridInChat(products) {
@@ -206,40 +209,16 @@ onLoginStateChanged((user) => {
       }
 });
     
-function handleCheckoutFlow() {
-  const { isEmpty } = cartManager.getCartSummary();
-  if (isEmpty) {
-    respondWithTyping({ sender: 'lyra', text: 'Keranjangmu masih kosong. Tambahkan produk dulu yuk!' });
-    return;
-  }
-
-  showTypingBubble();
-  showTypingHeader();
-  setTimeout(() => {
-    respondWithTyping({
-      sender: 'lyra',
-      text: `Sebelum checkout, tolong isi data berikut ya:
-
-        Nama:
-        No WA aktif:
-        Alamat lengkap:
-        Kurir:
-        Catatan:
-        `});
-            removeTypingBubble();
-            hideTypingHeader();
-          }, 800);
-
-          // Set flag supaya tahu user sedang dalam proses checkout
-          window.awaitingCheckoutForm = true;
-}
 
 async function handleUserInput(text) {
-  appendMessage({ sender: 'user', text }); // ⬅️ hanya di sini, biar ga dobel
+  appendMessage({ sender: 'user', text });
   input.value = '';
 
   const uid = getCurrentUID();
   const isGuest = !uid;
+
+  const handled = await handleCheckoutInput(text, cartManager.items);
+  if (handled) return;
 
   if (isGuest && chatCount >= LIMIT) return showLimitModal();
   if (isGuest) chatCount++;
@@ -280,7 +259,7 @@ async function handleUserInput(text) {
 
   // 💰 Checkout
 if (/checkout|bayar/i.test(text)) {
-    return handleCheckoutFlow();
+  return startCheckout(cartManager.items);
 }
 
 // 📋 Format checkout (Global Scope)

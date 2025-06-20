@@ -23,6 +23,12 @@ export function appendMessage({ sender, text, html, replyTo = null, product = nu
   } else if (text) {
     bubble.textContent = text;
   }
+  
+bubble.classList.add('opacity-0');
+setTimeout(() => {
+  bubble.classList.remove('opacity-0');
+  bubble.classList.add('animate-fade-in');
+}, 50);
 
   const time = document.createElement("div");
   time.className = "text-xs text-gray-400 mt-1 px-1";

@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "^4.1.10",
     "firebase": "^11.9.1",
     "lucide": "^0.515.0",
+    "midtrans-client": "^1.4.3",
     "tailwindcss": "^4.1.10"
   }
 }
