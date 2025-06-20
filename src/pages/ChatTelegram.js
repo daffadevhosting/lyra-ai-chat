@@ -8,6 +8,7 @@ import {
   hideTypingHeader } from '../modules/chatRenderer.js';
 import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
+import { cartManager} from '../modules/CartManager.js';
 import { logout } from '../modules/authHandler.js';
 
 let modeLYRA = localStorage.getItem('modeLYRA') || 'jualan';
@@ -76,7 +77,7 @@ if (toggleStyleBtn) {
     modeLYRA = MODES[modeIndex];
     localStorage.setItem('modeLYRA', modeLYRA);
     updateModeLabel();
-    respondWithTyping({ sender: 'lyra', text: `Oke! Gaya bicara ku sekarang: ${modeLYRA}` });
+    respondWithTyping({ sender: 'lyra', text: `Gaya ngobrol diganti jadi ${modeLYRA} ya! 😉` });
     showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
   });
 }
@@ -137,10 +138,9 @@ function renderProductGridInChat(products) {
       btn.onclick = () => {
         const slug = btn.dataset.slug;
         const product = PRODUCT_LIST.find(p => p.slug === slug);
-        if (product) cartItems.push(product);
+        if (product) cartManager.addItem(product);
       };
     });
-updateModeLabel();
   }, 50);
 }
 document.getElementById('toggleStyle')?.addEventListener('click', toggleModeLYRA);
@@ -211,12 +211,6 @@ function handleCheckoutFlow() {
     }
 
     sendBtn?.addEventListener('click', async () => {
-    const styleMatch = text.match(/(ubah|ganti) (gaya|tone|suara) (ke|jadi) (formal|genz|jualan|friendly)/i);
-    if (styleMatch) {
-      modeLYRA = styleMatch[4].toLowerCase();
-      appendMessage({ sender: 'lyra', text: `Gaya ngobrol diganti jadi *${modeLYRA}* ya! 😉` });
-      return;
-    }
       const text = input.value.trim();
       if (!text) return;
 
@@ -235,24 +229,37 @@ function handleCheckoutFlow() {
       if (/hapus/i.test(text)) {
       const keyword = text.replace(/hapus/i, '').trim().toLowerCase();
       const indexMatch = text.match(/ke-?(\d+)/i);
-      
+
+      const { items } = cartManager; // akses array internal
+
       if (indexMatch) {
         const index = parseInt(indexMatch[1], 10) - 1;
-        if (cartItems[index]) {
-          const removed = cartItems.splice(index, 1);
-          appendMessage({ sender: 'lyra', text: `Oke, aku hapus ${removed[0].name} dari keranjang.` });
+
+        if (items[index]) {
+          const removedItem = items.splice(index, 1)[0];
+          cartManager.notifyListeners(); // supaya update badge/dll
+          appendMessage({ sender: 'lyra', text: `Oke, aku hapus ${removedItem.name} dari keranjang.` });
         } else {
           appendMessage({ sender: 'lyra', text: `Item nomor ${index + 1} nggak ditemukan di keranjang.` });
         }
+
       } else {
-        const slugMatch = PRODUCT_LIST.find(p => p.name.toLowerCase().includes(keyword));
-        if (slugMatch) {
-          cartItems = cartItems.filter(p => p.slug !== slugMatch.slug);
-          appendMessage({ sender: 'lyra', text: `Item "${slugMatch.name}" sudah dihapus dari keranjang.` });
+        const match = PRODUCT_LIST.find(p => p.name.toLowerCase().includes(keyword));
+
+        if (match) {
+          const oldCount = items.length;
+          cartManager.items = items.filter(p => p.slug !== match.slug);
+          if (cartManager.items.length < oldCount) {
+            cartManager.notifyListeners();
+            appendMessage({ sender: 'lyra', text: `Item "${match.name}" sudah dihapus dari keranjang.` });
+          } else {
+            appendMessage({ sender: 'lyra', text: `Item "${match.name}" nggak ditemukan di keranjang.` });
+          }
         } else {
           appendMessage({ sender: 'lyra', text: `Item "${keyword}" nggak aku temuin di keranjang.` });
         }
       }
+
 
       return;
       }
@@ -277,18 +284,25 @@ function handleCheckoutFlow() {
           return;
         }
 
+        const cartData = cartManager.items.map(p => ({
+          name: p.name,
+          price: p.price,
+          qty: 1, // Atau lo bisa hitung qty manual pakai cartSummary kalau perlu
+          slug: p.slug,
+        }));
+
         // Kirim ke Telegram
         fetch('https://flat-river-1322.cbp629tmm2.workers.dev/', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkout: data, cart: cartItems })
+          body: JSON.stringify({ checkout: data, cart: cartData })
         });
 
         // Kirim ke backend Midtrans
         fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user: data, cart: cartItems })
+          body: JSON.stringify({ user: data, cart: cartData })
         })
         .then(res => res.json())
         .then(json => {
@@ -544,13 +558,20 @@ function openProductModal(product) {
     }, 300);
   };
 
-  document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-        btn.onclick = () => {
-          const slug = btn.dataset.slug;
-          const product = PRODUCT_LIST.find(p => p.slug === slug);
-          if (product) cartItems.push(product);
-        };
-      });
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('quick-detail')) {
+    const slug = e.target.dataset.slug;
+    const product = PRODUCT_LIST.find(p => p.slug === slug);
+    openProductModal(product);
+  }
+  if (e.target.classList.contains('quick-cart')) {
+    const slug = e.target.dataset.slug;
+    const product = PRODUCT_LIST.find(p => p.slug === slug);
+    cartManager.addItem(product);
+    trackProductInteraction(slug, 'addedToCart');
+    showGlobalAlert(`${product.name} ditambahkan ke keranjang 🛒`, 'success');
+  }
+});
 
       const cartBtn = document.getElementById('cartBtn');
       cartBtn?.addEventListener('click', () => {
@@ -658,8 +679,8 @@ function openProductModal(product) {
     }
   }, 50);
   
-  return `
-    <div class="flex h-screen bg-white text-black dark:bg-[#1d1f2b] dark:text-white font-sans relative overflow-hidden">
+return `
+    <div class="flex h-screen bg-[#1d1f2b] text-white font-sans relative overflow-hidden">
       <!-- Sidebar overlay for mobile -->
       <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-30 hidden md:hidden"></div>
       <!-- Sidebar -->
@@ -678,11 +699,16 @@ function openProductModal(product) {
         <div id="sidebarProduct" class="flex-1 overflow-y-auto scrollbar-none space-y-2"></div>
         <div class="relative bottom-0 left-0">
         <div class="mt-auto pt-4 border-t border-gray-700">
+        <!-- Dark/Light mode toggle button -->
+        <button id="themeToggle" class="cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition mb-2">
+        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-question-mark-icon lucide-circle-question-mark"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+          <span id="themeLabel">Faq</span>
+        </button>
         <button id="toggleStyle" class=" cursor-pointer flex items-center gap-2 w-full text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
           <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path d="M12 20h9" /><path d="M12 4h9" /><path d="M4 9h16" /><path d="M4 15h16" />
           </svg>
-          Gaya Bicara: <span id="modeLabel">jualan</span>
+          Gaya Bicara <span id="modeLabel"></span>
         </button>
         <!-- Tombol Cheatsheet -->
         <button id="openCheatsheet" class="flex items-center cursor-pointer gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
@@ -788,7 +814,6 @@ function openProductModal(product) {
             <li><code>apa itu LYRA?</code> – tanya tentang L Y Я A</li>
             <li><code>ini toko apa?</code> – tanya tentang toko ini</li>
             <li>Dan masih banyak lagi! Coba aja tanya, L Y Я A siap bantu! 😊</li>
-            <li><small>bisa saja L Y Я A memberikan jawaban yang tidak relevan, jadi pastikan untuk bertanya dengan jelas ya!</small></li>
           </ul>
             <p class="text-center"><small>L Y Я A bisa salah. Silakan verifikasi info penting.</small></p>
         </div>

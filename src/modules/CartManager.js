@@ -50,6 +50,13 @@ class CartManager {
     this.items = [];
     this.notifyListeners();
   }
+
+  // 🔥 Tambahan method baru
+  removeBySlug(slug) {
+    const oldLen = this.items.length;
+    this.items = this.items.filter(p => p.slug !== slug);
+    if (this.items.length !== oldLen) this.notifyListeners();
+  }
 }
 
 export const cartManager = new CartManager();

@@ -3,7 +3,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,html}"
   ],
-  darkMode: 'class', // ⬅️ ini yang penting
+  darkMode: 'class',
   theme: {
     extend: {},
   },
