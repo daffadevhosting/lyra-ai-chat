@@ -24,14 +24,40 @@ const groqKey = import.meta.env.VITE_GROQ_API_KEY;
 const db = getFirestore();
 const auth = getAuth();
 
-// Utility and Helper Functions
-function getGreetingByTime() {
+function getGreetingByTime(mode = 'default') {
   const now = new Date();
   const hour = now.getHours();
   if (hour >= 4 && hour < 11) return '🌞 Selamat pagi';
   if (hour >= 11 && hour < 15) return '☀️ Selamat siang';
   if (hour >= 15 && hour < 18) return '🌇 Selamat sore';
   if (hour >= 18 && hour < 4) return '🌙 Selamat malam';
+  const time = hour < 11 ? 'pagi' : hour < 15 ? 'siang' : hour < 18 ? 'sore' : 'malam';
+
+  const greetings = {
+    jualan: [
+      `Selamat ${time}! Siap belanja hemat bareng LYRA? 🛒`,
+      `Halo! Mau cari promo apa hari ini? ✨`,
+      `Waktunya belanja cerdas bareng aku~`
+    ],
+    formal: [
+      `Selamat ${time}. Ada yang bisa saya bantu?`,
+      `Hai, terima kasih telah berkunjung. Saya siap membantu.`,
+      `Salam hormat. LYRA di sini untuk membantu Anda.`
+    ],
+    genz: [
+      `Yoo selamat ${time} gengs 😎`,
+      `Halo bestie~ Mau beli apa hari ini? 💅`,
+      `Ayo gaskeun belanja! Jangan banyak mikir 💸`
+    ],
+    default: [
+      `Selamat ${time}! 👋`,
+      `Hai, ada yang bisa aku bantu hari ini? 😊`,
+      `Halo! Mau cari apa nih?`
+    ]
+  };
+
+  const selected = greetings[mode] || greetings.default;
+  return selected[Math.floor(Math.random() * selected.length)];
 }
 
 function updateModeLabel() {
@@ -218,8 +244,8 @@ let hasWelcomed = false;
 async function sendWelcomeMessage(user) {
   if (hasWelcomed) return;
   hasWelcomed = true;
-  const greeting = getGreetingByTime();
-  const name = user?.displayName || 'stranger';
+  const greeting = getGreetingByTime(modeLYRA);
+  const name = user?.displayName || 'teman';
   const welcomeTexts = [
     `${greeting}, ${name}! Aku LYRA 😉`,
     `${greeting}, ${name}! Lyra siap bantu kamu cari produk kece hari ini. 😎`,
@@ -227,8 +253,8 @@ async function sendWelcomeMessage(user) {
     `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
   ];
   const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
-  respondWithTyping({ sender: 'lyra', text: randomText });
-  setTimeout(() => {
+  const msg1 = respondWithTyping({ sender: 'lyra', text: `${randomText}` });
+  const msg2 = setTimeout(() => {
     const toggleStyleBtn = document.getElementById('toggleStyle');
     if (toggleStyleBtn) {
       toggleStyleBtn.addEventListener('click', () => {
@@ -240,11 +266,20 @@ async function sendWelcomeMessage(user) {
         showGlobalAlert(`Gaya bicara LYRA diubah ke: ${modeLYRA}`, 'success');
       });
     }
-    respondWithTyping({
+  respondWithTyping({
       sender: 'lyra',
       text: `Coba klik produk di sidebar atau langsung ketik "minta katalog nya" ke LYЯA. Tanya apapun, ${name}. Aku standby! 🚀 Mau lihat profile kamu, ketik aja "akun saya" 😉`,
     });
   }, 1200);
+    // 🎭 Tambahkan efek fade dan remove
+  [msg1, msg2].forEach((el, i) => {
+    setTimeout(() => {
+      el.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
+      setTimeout(() => {
+        el.remove();
+      }, 1200);
+    }, 4000 + (i * 800)); // delay antar balon
+  });
 }
 
 function renderProductGridInChat(products) {
@@ -380,38 +415,38 @@ export default function ChatTelegram() {
       }
     });
 
-onLoginStateChanged(async (user) => {
-  const db = getFirestore();
+    onLoginStateChanged(async (user) => {
+      const db = getFirestore();
 
-  if (user && loginBtn) {
-    const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
-    loginBtn.textContent = `Halo, ${name}`;
-    loginBtn.disabled = true;
-    logoutBtn?.classList.remove('hidden');
-    hideLimitModal();
+      if (user && loginBtn) {
+        const name = user.displayName?.split(' ')[0] ?? user.email?.split('@')[0] ?? 'User';
+        loginBtn.textContent = `Halo, ${name}`;
+        loginBtn.disabled = true;
+        logoutBtn?.classList.remove('hidden');
+        hideLimitModal();
 
-    // ⛳ Cek & Simpan user ke Firestore kalau belum ada
-    const userRef = doc(db, 'users', user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) {
-      await setDoc(userRef, {
-        uid: user.uid,
-        nama: user.displayName ?? name,
-        email: user.email ?? '-',
-        totalOrder: 0,
-        level: 'Member',
-        createdAt: new Date()
-      });
-      console.log('✅ User baru dibuat di Firestore');
-    }
+        // ⛳ Cek & Simpan user ke Firestore kalau belum ada
+        const userRef = doc(db, 'users', user.uid);
+        const snap = await getDoc(userRef);
+        if (!snap.exists()) {
+          await setDoc(userRef, {
+            uid: user.uid,
+            nama: user.displayName ?? name,
+            email: user.email ?? '-',
+            totalOrder: 0,
+            level: 'Member',
+            createdAt: new Date()
+          });
+          console.log('✅ User baru dibuat di Firestore');
+        }
 
-    sendWelcomeMessage(user);
-  } else {
-    sendWelcomeMessage(null);
-    logoutBtn?.classList.add('hidden');
-  }
-});
-      
+        sendWelcomeMessage(user);
+      } else {
+        sendWelcomeMessage(null);
+        logoutBtn?.classList.add('hidden');
+      }
+    });
+          
     async function handleUserInput(text) {
       appendMessage({ sender: 'user', text });
       input.value = '';
@@ -521,7 +556,7 @@ onLoginStateChanged(async (user) => {
           const styled = generateTone(rawResponse, modeLYRA);
           respondWithTyping({ text: styled, product: matchedProduct });
         } else {
-          handleRequest(text); // fallback ke GPT
+          handleRequest(text, safeRenderHTML); // fallback ke GPT
         }
       }
     }
@@ -778,7 +813,7 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
           </div>
 
           <div class="p-4 border-t border-gray-700 flex items-center gap-2 bg-[#2a2c3b]">
-          <textarea id="chatInput" rows="1" placeholder="Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></textarea>
+          <input id="chatInput" rows="1" placeholder="Tulis / Tanyakan sesuatu..." class="flex-1 bg-[#1d1f2b] text-white p-2 rounded-full focus:outline-none border border-gray-600"></input>
             <button id="sendBtn" class="cursor-pointer flex items-center gap-2 bg-purple-600 px-3 py-3 rounded-full">
               <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12l16-6m0 0l-6 16m6-16L4 12" />
