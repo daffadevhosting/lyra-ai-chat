@@ -119,8 +119,8 @@ src/
 
 1. Clone repo dan jalankan:
 ```bash
-   git clone https://github.com/daffadevhosting/lira-ai-chat.git
-   cd lira-ai-chat
+   git clone https://github.com/daffadevhosting/lyra-ai-chat.git
+   cd lyra-ai-chat
    npm install
    npm run dev
 ```
@@ -130,15 +130,16 @@ src/
 
  - Simpan chat ke Firestore
 
- - Produk dari database
-
  - Voice recognition (mic)
 
  - Text-to-speech (suara L Y Я A cewek)
 
- - Sistem payment via Midtrans (on Working)
+ - Produk dari database **(Done)**
 
- - Checkout produk langsung via AI
+ - Checkout produk langsung via AI **(Done)**
+
+ - Sistem payment via XENDit **(Done)**
+
 
  ## 💻 Demo
 
