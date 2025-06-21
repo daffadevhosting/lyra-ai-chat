@@ -119,8 +119,8 @@ export async function handleCheckoutInput(text, cartItems) {
             <strong>🧾 Pesanan kamu:</strong><br>
             ${itemList}<br><br>
             <strong>💰 Total: Rp ${totalHarga.toLocaleString('id-ID')}</strong><br><br>
-            <a href="${json.invoice_url}" target="_blank" class="inline-block mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-                👉 Klik di sini untuk bayar via Xendit
+            <a href="${json.invoice_url}" target="_blank" class=" mt-2 text-white px-4 py-2 hover:bg-blue-700 transition">
+                <h1>👉 Klik di sini untuk bayar via Xendit</h1>
             </a>
             </div>
         `

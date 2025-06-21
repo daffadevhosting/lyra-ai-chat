@@ -9,17 +9,33 @@ export function appendMessage({ sender, text, html, replyTo = null, product = nu
     div.appendChild(reply);
   }
 
-  const bubble = document.createElement('div');
-  bubble.className = `relative max-w-xs px-4 py-2 rounded-2xl whitespace-pre-line ${
-    sender === 'user'
-      ? 'bg-purple-600 text-white self-end rounded-br-none'
-      : 'bg-gray-700 text-white self-start rounded-bl-none'
-  }`;
+function safeRenderHTML(rawHtml) {
+  const allowedTags = ['DIV', 'P', 'A', 'BUTTON', 'H3', 'H4', 'H5', 'IMG', 'SPAN', 'UL', 'LI', 'STRONG', 'BR'];
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = rawHtml;
+
+  // Remove tag yang gak valid
+  [...wrapper.querySelectorAll('*')].forEach(el => {
+    if (!allowedTags.includes(el.tagName)) el.remove();
+  });
+
+  return wrapper.innerHTML;
+}
+const bubble = document.createElement('div');
+const isWideContent = html && (html.includes('add-to-cart-btn') || html.includes('<div class="card">'));
+bubble.className = `
+  relative
+  ${isWideContent ? 'w-full max-w-none' : 'max-w-xs'} 
+  px-4 py-2 rounded-2xl whitespace-pre-line
+  ${sender === 'user'
+    ? 'bg-purple-600 text-white self-end rounded-br-none'
+    : 'bg-gray-700 text-white self-start rounded-bl-none'}
+`;
   if (sender === 'lyra') {
     bubble.classList.add('bubble-pop');
   }
   if (html) {
-    bubble.innerHTML = html;
+    bubble.innerHTML = safeRenderHTML(html);
   } else if (text) {
     bubble.textContent = text;
   }
@@ -37,6 +53,7 @@ setTimeout(() => {
   div.appendChild(bubble);
   div.appendChild(time);
 
+
   if (product) {
     const card = document.createElement("div");
     card.className = `mt-2 rounded-xl overflow-hidden bg-[#2e2e3e] border border-gray-600`;
@@ -46,7 +63,7 @@ setTimeout(() => {
         <div class="font-bold">${product.name}</div>
         <div class="text-sm text-gray-300">${product.price}</div>
         <div class="flex items-center gap-1.5 justify-between mt-2">
-          <a href="#" onclick="snap.pay') class="text-sm flex inline-block px-3 py-1 bg-green-500 text-white rounded-lg">Beli Sekarang</a>
+          <button onclick="alert('under Maintenance! proses pembelian tersedia di katalog, silahkan ketik - minta katalog dong.')" class="cursor-pointer text-sm add-to-cart-btn flex inline-block px-3 py-1 bg-green-500 text-white rounded-lg">Beli Sekarang</button>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2-icon lucide-share-2">
             <circle cx="18" cy="5" r="3"/>
             <circle cx="6" cy="12" r="3"/>

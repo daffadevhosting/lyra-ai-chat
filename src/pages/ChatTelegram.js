@@ -6,6 +6,7 @@ import {
   removeTypingBubble,
   showTypingHeader,
   hideTypingHeader } from '../modules/chatRenderer.js';
+import { safeRenderHTML, attachProductModalTriggers } from '../modules//htmlRenderer.js';
 import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { cartManager} from '../modules/CartManager.js';
@@ -20,19 +21,11 @@ let PRODUCT_LIST = [];
 let chatCount = 0;
 const LIMIT = 10;
 const groqKey = import.meta.env.VITE_GROQ_API_KEY;
-let checkoutStep = 0;
-let checkoutData = {};
 
 async function loadProductList() {
   const db = getFirestore();
   const snapshot = await getDocs(collection(db, 'products'));
   PRODUCT_LIST = snapshot.docs.map(doc => doc.data());
-}
-async function trackProductInteraction(slug, type = 'viewed') {
-  const db = getFirestore();
-  const ref = doc(db, 'analytics', slug);
-  await setDoc(ref, { viewed: 0, addedToCart: 0 }, { merge: true });
-  await updateDoc(ref, { [type]: increment(1) });
 }
 function getGreetingByTime() {
   const now = new Date();
@@ -41,18 +34,22 @@ function getGreetingByTime() {
   if (hour >= 4 && hour < 11) return '🌞 Selamat pagi';
   if (hour >= 11 && hour < 15) return '☀️ Selamat siang';
   if (hour >= 15 && hour < 18) return '🌇 Selamat sore';
-  return '🌙 Selamat malam';
+  if (hour >= 18 && hour < 4) return '🌙 Selamat malam';
 }
 
-function respondWithTyping({ text, product = null, replyTo = null }) {
+function respondWithTyping({ text, product = null, replyTo = null, html }) {
   showTypingBubble();
   showTypingHeader();
 
   setTimeout(() => {
-    appendMessage({ sender: 'lyra', text, product, replyTo });
+    appendMessage({ sender: 'lyra', text, product, replyTo, html });
     removeTypingBubble();
     hideTypingHeader();
   }, 1000 + Math.random() * 400); // biar dramatis
+  setTimeout(() => {
+    removeTypingBubble();
+    hideTypingHeader();
+  }, 1000 + Math.random() * 400);
 }
 
 let hasWelcomed = false;
@@ -103,13 +100,13 @@ if (toggleStyleBtn) {
 
 function renderProductGridInChat(products) {
   const html = `
-    <div class=\"grid grid-cols-2 gap-2 animate-fade-in\">
+    <div class=\"w-full max-w-3xl md:max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 mx-auto animate-fade-in\">
       ${products.map(p => `
         <div class="bg-gray-700 border border-cyan-400 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
-          <img src="${p.img}" class="w-full h-20 object-cover rounded" />
+          <img id="product-modal" src="${p.img}" alt="${p.name}" class="w-full h-24 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
-          <button id="atc" class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
+          <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
         </div>
       `).join('')}
     </div>
@@ -258,7 +255,7 @@ async function handleUserInput(text) {
   }
 
   // 💰 Checkout
-  const { isEmpty, cartList, total } = cartManager.getCartSummary();
+  const { isEmpty } = cartManager.getCartSummary();
 if (/checkout|bayar/i.test(text)) {
   if (isEmpty) {
     respondWithTyping({
@@ -272,7 +269,7 @@ if (/checkout|bayar/i.test(text)) {
 }
 
   // 📦 Semua produk
-if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap/i.test(text)) {
+if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap|catalog/i.test(text)) {
     showTypingBubble();
     showTypingHeader();
     setTimeout(() => {
@@ -442,9 +439,11 @@ document.getElementById('closeFaq')?.addEventListener('click', () => {
 function openProductModal(product) {
   document.getElementById('modal-image').src = product.img || '/default.jpg';
   document.getElementById('modal-title').textContent = product.name;
+  document.getElementById('modal-description').textContent = product.description || 'Deskripsi tidak tersedia';
   document.getElementById('modal-rating').textContent = product.rating;
   document.getElementById('modal-sold').textContent = product.sold;
   document.getElementById('modal-price').textContent = `Rp ${product.price.toLocaleString()}`;
+  document.getElementById('buy-button').dataset.slug = product.slug;
 
     const modal = document.getElementById('product-modal');
     const modalContent = document.getElementById('modal-content');
@@ -455,11 +454,6 @@ function openProductModal(product) {
       modalContent.classList.remove('opacity-0', 'scale-95');
       modalContent.classList.add('opacity-100', 'scale-100');
     }, 10);
-
-    // Midtrans tombol
-    document.getElementById('buy-button').onclick = () => {
-      snap.pay(product.snapToken);
-    };
   }
 
   document.getElementById('modal-close').onclick = () => {
@@ -564,6 +558,16 @@ cartBtn?.addEventListener('click', () => {
             });
           }, 50);
 
+setTimeout(() => {
+  document.querySelectorAll('open-product-image').forEach(link => {
+    link.onclick = (e) => {
+      e.preventDefault();
+      const slug = link.dataset.slug;
+      const product = PRODUCT_LIST.find(p => p.slug === slug);
+      if (product) openProductModal(product);
+    };
+  });
+}, 100); // after DOM ready
           }, 800 + Math.random() * 400);
         }, 1000 + Math.random() * 500);
 
@@ -712,9 +716,10 @@ return `
               <h3 id="modal-title" class="text-xl font-bold"></h3>
               <p class="text-sm text-yellow-400 md:mr-8 mr-0">⭐ <span id="modal-rating"></span></p>
               </div>
+              <p id="modal-description" class="text-sm text-gray-300 mb-2"></p>
               <p class="text-sm text-amber-50">Terjual: <span id="modal-sold"></span></p>
               <p id="modal-price" class="text-lg font-semibold text-green-600 mt-2"></p>
-              <button id="buy-button" class="mt-auto cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+              <button id="buy-button" onclick="alert('under Maintenance! proses pembelian tersedia di katalog, silahkan ketik - minta katalog dong.')" class="mt-auto cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition add-to-cart-btn">
                 Beli Sekarang
               </button>
             </div>

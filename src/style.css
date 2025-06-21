@@ -78,3 +78,9 @@
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+.card {
+  @apply bg-[#2a2c3b] text-white p-4 rounded-xl mb-2 shadow border border-gray-700;
+}
+.btn {
+  @apply mt-2 inline-block px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm;
+}
