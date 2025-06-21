@@ -45,8 +45,7 @@
   <div class="animate-spin rounded-full h-14 w-14 border-t-4 border-purple-500 border-opacity-50"></div>
 </div>
 </body>
-</html>
-<script type="module">
+</html><script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 
@@ -58,6 +57,7 @@
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
   };
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -72,25 +72,27 @@
   const orderId = params.get("order_id");
 
   if (!orderId) {
-    return showError("Order ID tidak ditemukan di URL.");
+    showError("Order ID tidak ditemukan di URL.");
+    return;
   }
 
   try {
-    const docRef = doc(db, "orders", orderId);
+    const docRef = doc(db, "checkouts", orderId); // <-- gunakan koleksi 'checkouts'
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-      return showError("Order tidak ditemukan di database.");
+      showError("Order tidak ditemukan di database.");
+      return;
     }
 
     const data = docSnap.data();
 
-    // 🧾 User info
+    // 🧾 Info user
     document.getElementById('buyerName').textContent = data.user?.nama || '-';
     document.getElementById('buyerPhone').textContent = data.user?.no_wa || '-';
     document.getElementById('buyerAddress').textContent = data.user?.alamat || '-';
 
-    // 🛍️ Cart
+    // 🛒 Daftar item
     const itemList = document.getElementById('itemList');
     itemList.innerHTML = '';
     let total = 0;
@@ -121,3 +123,4 @@
     errorMessage.textContent = msg;
   }
 </script>
+
