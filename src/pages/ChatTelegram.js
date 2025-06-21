@@ -23,6 +23,8 @@ const LIMIT = 10;
 const groqKey = import.meta.env.VITE_GROQ_API_KEY;
 const db = getFirestore();
 const auth = getAuth();
+const cartBtn = document.getElementById('cartBtn');
+
 
 function getGreetingByTime(mode = 'default') {
   const now = new Date();
