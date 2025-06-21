@@ -1,3 +1,6 @@
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
 import { 
   appendMessage,
   showTypingBubble,
@@ -5,6 +8,21 @@ import {
   showTypingHeader,
   hideTypingHeader 
 } from './chatRenderer.js';
+
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth();
+const db = getFirestore(app);
+
+const user = auth.currentUser;
+const uid = user?.uid || 'guest'; // fallback guest
 
 let checkoutStep = 0;
 let checkoutData = {};
@@ -82,7 +100,7 @@ export async function handleCheckoutInput(text, cartItems) {
     }
 
     if (/lanjut/i.test(text)) {
-      respondWithTyping({ text: 'Siap! Aku lagi proses ke Xendit ya...' });
+      respondWithTyping({ text: 'Siap! mohon tunggu, Aku proses ke Xendit dulu ya...' });
 
       try {
         await fetch('https://flat-river-1322.cbp629tmm2.workers.dev/', {
@@ -142,21 +160,30 @@ export async function handleCheckoutInput(text, cartItems) {
           wrapper.appendChild(bubble);
 
           document.getElementById('chatBox').appendChild(wrapper);
-          scrollToTop();
-
-        }, 800 + Math.random() * 400);
+          
+        }, 800 + Math.random() * 400);// Setelah kirim ke Xendit dan dapet json.invoice_url
+          // ⏺ Simpan ke Firestore
+          await addDoc(collection(db, 'checkouts'), {
+            user: checkoutData,
+            cart: cartItems,
+            createdAt: serverTimestamp()
+          });
         } else {
         respondWithTyping({ sender: 'lyra', text: 'Xendit tidak memberikan tautan pembayaran 😥. Coba lagi ya.' });
         }
-
-        setTimeout(() => {
+          setTimeout(() => {
           respondWithTyping({
             sender: 'lyra',
-            text: modeLYRA === 'genz' 
-                  ? 'Cus klik tombolnya, biar langsung kita gas kirim sekarang! 🔥🚀' 
-                  : 'Silakan klik tombol bayar di atas untuk kita proses pengiriman secepatnya 🚚✨'
+            text: 'Silakan klik tombol bayar di atas untuk kita proses pengiriman secepatnya 🚚✨'
           });
         }, 1200); // biar keliatan natural
+        const orderRef = doc(collection(db, "users", uid, "orders"));
+        await setDoc(orderRef, {
+          user: checkoutData,
+          cart: cartItems,
+          createdAt: Date.now(),
+          status: 'waiting'
+        });
 
         checkoutStep = 0;
         checkoutData = {};

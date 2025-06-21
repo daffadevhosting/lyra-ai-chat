@@ -1,7 +1,7 @@
 // src/modules/authHandler.js
-
-import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -51,5 +51,22 @@ export function onLoginStateChanged(callback) {
   window._onLoginStateChanged = callback;
   if (typeof currentUser !== 'undefined') {
     callback(currentUser);
+  }
+}
+async function saveUserIfNew(user) {
+  const db = getFirestore();
+  const userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
+
+  if (!snap.exists()) {
+    await setDoc(userRef, {
+      uid: user.uid,
+      nama: user.displayName || 'Pengguna Baru',
+      email: user.email || '-',
+      totalOrder: 0,
+      level: 'Member',
+      createdAt: new Date()
+    });
+    console.log('✅ User baru disimpan ke Firestore');
   }
 }
