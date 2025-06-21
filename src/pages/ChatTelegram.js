@@ -23,7 +23,6 @@ const LIMIT = 10;
 const groqKey = import.meta.env.VITE_GROQ_API_KEY;
 const db = getFirestore();
 const auth = getAuth();
-const cartBtn = document.getElementById('cartBtn');
 
 
 function getGreetingByTime(mode = 'default') {
@@ -255,8 +254,8 @@ async function sendWelcomeMessage(user) {
     `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
   ];
   const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
-  const msg1 = respondWithTyping({ sender: 'lyra', text: `${randomText}` });
-  const msg2 = setTimeout(() => {
+  respondWithTyping({ sender: 'lyra', text: `${randomText}` });
+  setTimeout(() => {
     const toggleStyleBtn = document.getElementById('toggleStyle');
     if (toggleStyleBtn) {
       toggleStyleBtn.addEventListener('click', () => {
@@ -273,14 +272,6 @@ async function sendWelcomeMessage(user) {
       text: `Coba klik produk di sidebar atau langsung ketik "minta katalog nya" ke LYЯA. Tanya apapun, ${name}. Aku standby! 🚀 Mau lihat profile kamu, ketik aja "akun saya" 😉`,
     });
   }, 1200);
-    // 🎭 Tambahkan efek fade dan remove
-  [msg1, msg2].forEach((el, i) => {
-    setTimeout(() => {
-      setTimeout(() => {
-        el.remove();
-      }, 1200);
-    }, 4000 + (i * 800)); // delay antar balon
-  });
 }
 
 function renderProductGridInChat(products) {
@@ -566,6 +557,48 @@ export default function ChatTelegram() {
       await logout();
       window.location.href = '/';
     });
+
+const cartBtn = document.getElementById('cartBtn');
+
+cartBtn?.addEventListener('click', () => {
+  const { isEmpty, cartList, total } = cartManager.getCartSummary();
+
+  if (isEmpty) {
+    globalAlert('Keranjang masih kosong');
+
+    setTimeout(() => {
+      showTypingBubble();
+      showTypingHeader();
+
+      setTimeout(() => {
+        appendMessage({ 
+          sender: 'lyra', 
+          text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' 
+        });
+
+        removeTypingBubble();
+        hideTypingHeader();
+      }, 800 + Math.random() * 400);
+    }, 10);
+
+    return;
+  }
+
+  setTimeout(() => {
+    showTypingBubble();
+    showTypingHeader();
+
+    setTimeout(() => {
+      appendMessage({
+        sender: 'lyra',
+        text: `Isi keranjang kamu:\n${cartList}\n\nTotal: Rp ${total.toLocaleString('id-ID')}`
+      });
+
+      removeTypingBubble();
+      hideTypingHeader();
+    }, 800 + Math.random() * 400);
+  }, 10);
+});
         
     const cheatsheetModal = document.getElementById('cheatsheet-modal');
     const cheatsheetContent = document.getElementById('cheatsheet-content');
@@ -777,7 +810,7 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
                 <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
               </div>
             </div>
-            <button class="relative text-sm bg-transparent text-white px-3 py-3 rounded">
+            <button id="cartBtn" class="relative cursor-pointer text-sm bg-transparent text-white px-3 py-3 rounded">
               <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart-icon lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
               <span id="cartQtyBadge" class="absolute -top-0 -right-0 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
             </button>
