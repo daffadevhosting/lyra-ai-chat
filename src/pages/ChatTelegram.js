@@ -103,7 +103,7 @@ function renderProductGridInChat(products) {
     <div class=\"w-full max-w-3xl md:max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 mx-auto animate-fade-in\">
       ${products.map(p => `
         <div class="bg-gray-700 border border-cyan-400 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
-          <img id="product-modal" src="${p.img}" alt="${p.name}" class="w-full h-24 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
+          <img id="product-modal" src="${p.img}" alt="${p.name}" class="w-full h-52 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
           <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
@@ -618,7 +618,7 @@ return `
           Cheatsheet
         </button>
           <!-- Tombol Pengaturan -->
-          <button id="openSettings" onclick="location.href='/underconstruction.html'" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
+          <button id="openSettings" onclick="location.href='/under-construction'" class="cursor-pointer flex items-center gap-2 w-full text-left text-sm px-3 py-2 hover:bg-gray-700 rounded-lg transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-settings w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09c.7 0 1.31-.4 1.51-1a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06c.46.46 1.12.6 1.72.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .7.4 1.31 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06c-.46.46-.6 1.12-.33 1.72v.01c.3.6.94 1 1.66 1H21a2 2 0 0 1 0 4h-.09c-.7 0-1.31.4-1.51 1Z"/>
@@ -669,41 +669,40 @@ return `
           </button>
        </div>
        </div>
-
-      <div id="faqModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center">
-        <div class="bg-[#2c2e3e] text-white rounded-lg w-11/12 max-w-lg p-6 shadow-lg transform opacity-0 scale-95 transition-all duration-300">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold">❓ Pertanyaan Umum (FAQ)</h2>
-            <button id="closeFaq" class="text-gray-400 hover:text-white cursor-pointer">
-              <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-x w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path d="M18 6 6 18"/><path d="M6 6l12 12"/>
-              </svg>
-            </button>
+          <div id="faqModal" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-[#2c2e3e] text-white rounded-xl w-11/12 max-w-lg px-6 py-5 shadow-2xl transform opacity-0 scale-95 transition-all duration-300 ease-out">
+              <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-semibold tracking-wide">❓ Pertanyaan Umum (FAQ)</h2>
+                <button id="closeFaq" class="cursor-pointer text-gray-400 hover:text-white transition-colors duration-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="lucide lucide-x w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/><path d="M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="text-sm space-y-5 max-h-[65vh] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div>
+                  <strong class="text-blue-400">Apa itu L Y Я A?</strong>
+                  <p class="text-gray-300">L Y Я A adalah asisten AI interaktif yang bisa bantu kamu cari produk, melakukan checkout, dan tanya-tanya seputar toko online ini.</p>
+                </div>
+                <div>
+                  <strong class="text-blue-400">Bagaimana cara belanja?</strong>
+                  <p class="text-gray-300">Kamu bisa klik produk di sidebar atau ketik nama produk di chat. Lalu tambahkan ke keranjang dan ketik <code class="text-yellow-300">checkout</code>.</p>
+                </div>
+                <div>
+                  <strong class="text-blue-400">Apa bisa bayar langsung?</strong>
+                  <p class="text-gray-300">Ya! Setelah checkout, kamu bisa bayar lewat Midtrans atau Xendit melalui tautan pembayaran yang muncul di chat.</p>
+                </div>
+                <div>
+                  <strong class="text-blue-400">Batasan user gratis?</strong>
+                  <p class="text-gray-300">User anonim bisa chat maksimal 10x. Login untuk akses lebih banyak fitur!</p>
+                </div>
+                <div>
+                  <strong class="text-blue-400">Data saya aman?</strong>
+                  <p class="text-gray-300">Tentu! Data kamu tidak akan disalahgunakan. Kami hanya menyimpan informasi yang diperlukan untuk proses transaksi.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="text-sm space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-            <div>
-              <strong>Apa itu L Y Я A?</strong>
-              <p>L Y Я A adalah asisten AI interaktif yang bisa bantu kamu cari produk, melakukan checkout, dan tanya-tanya seputar toko online ini.</p>
-            </div>
-            <div>
-              <strong>Bagaimana cara belanja?</strong>
-              <p>Kamu bisa klik produk di sidebar atau ketik nama produk di chat. Lalu tambahkan ke keranjang dan ketik <code>checkout</code>.</p>
-            </div>
-            <div>
-              <strong>Apa bisa bayar langsung?</strong>
-              <p>Ya! Setelah checkout, kamu bisa bayar lewat Midtrans atau Xendit melalui tautan pembayaran yang muncul di chat.</p>
-            </div>
-            <div>
-              <strong>Batasan user gratis?</strong>
-              <p>User anonim bisa chat maksimal 10x. Login untuk akses lebih banyak fitur!</p>
-            </div>
-            <div>
-              <strong>Data saya aman?</strong>
-              <p>Tentu! Data kamu tidak akan disalahgunakan. Kami hanya menyimpan informasi yang diperlukan untuk proses transaksi.</p>
-            </div>
-          </div>
-        </div>
-      </div>
       <div id="product-modal" class="fixed inset-0 z-50 hide  bg-black/50 backdrop-blur-sm flex items-center justify-center">
         <div id="modal-content" class="bg-[#2a2c3b] opacity-0 scale-95 relative rounded-2xl w-full max-w-xl mx-4 md:mx-auto md:w-[600px] overflow-hidden shadow-lg transition-all">
           <button id="modal-close" class="absolute cursor-pointer top-2 right-4 text-red-800 text-4xl">&times;</button>
@@ -737,21 +736,57 @@ return `
               </svg>
             </button>
           </div>
-          <ul class="space-y-2 text-sm text-gray-300 list-disc list-inside max-h-[80vh] overflow-y-auto pr-2">
-            <li><code>ada produk apa</code> – tampilkan semua produk</li>
-            <li><code>minta best seller</code> – tampilkan produk terlaris</li>
-            <li><code>rekomendasi dong</code> – minta rekomendasi</li>
-            <li><code>lihat keranjang</code> – tampilkan isi keranjang</li>
-            <li><code>hapus (nama produk)</code> – hapus item keranjang</li>
-            <li><code>Nama: ...</code> – kirim data checkout <strong>(onworking)</strong></li>
-            <li><code>aku mau bayar</code> – Snap midtrans <strong>(onworking)</strong></li>
-            <li><code>kamu siapa?</code> – kenalan sama L Y Я A 😄</li>
-            <li><code>motto kamu apa</code> – tanya motto hidup LYRA</li>
-            <li><code>apa itu LYRA?</code> – tanya tentang L Y Я A</li>
-            <li><code>ini toko apa?</code> – tanya tentang toko ini</li>
-            <li>Dan masih banyak lagi! Coba aja tanya, L Y Я A siap bantu! 😊</li>
+          <ul class="space-y-3 text-sm text-gray-100 list-inside max-h-[80vh] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">💬</span>
+              <span><code class="text-yellow-300">ada produk apa</code> – tampilkan semua produk</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">🔥</span>
+              <span><code class="text-yellow-300">minta best seller</code> – tampilkan produk terlaris</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">✨</span>
+              <span><code class="text-yellow-300">rekomendasi dong</code> – minta rekomendasi</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">🛒</span>
+              <span><code class="text-yellow-300">lihat keranjang</code> – tampilkan isi keranjang</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">❌</span>
+              <span><code class="text-yellow-300">hapus (nama-produk)</code> – hapus item keranjang</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-green-400">✅</span>
+              <span><code class="text-yellow-300">checkout dong</code> – kirim data checkout <strong class="text-green-400">(DONE)</strong></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-green-400">💳</span>
+              <span><code class="text-yellow-300">aku mau bayar</code> – XENDIT <strong class="text-green-400">(DONE)</strong></span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">🤖</span>
+              <span><code class="text-yellow-300">kamu siapa?</code> – kenalan sama L Y Я A 😄</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">💡</span>
+              <span><code class="text-yellow-300">motto kamu apa</code> – tanya motto hidup LYRA</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">📘</span>
+              <span><code class="text-yellow-300">apa itu LYRA?</code> – tanya tentang L Y Я A</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-blue-400">🏪</span>
+              <span><code class="text-yellow-300">ini toko apa?</code> – tanya tentang toko ini</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="mt-1 text-purple-400">🌟</span>
+              <span>Dan masih banyak lagi! Coba aja tanya, L Y Я A siap bantu!</span>
+            </li>
           </ul>
-            <p class="text-center"><small>L Y Я A bisa salah. Silakan verifikasi info penting.</small></p>
+            <p class="text-center mt-4"><small>L Y Я A bisa saja salah. Silakan verifikasi info penting.</small></p>
         </div>
       </div>
 

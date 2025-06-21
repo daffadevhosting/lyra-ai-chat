@@ -107,28 +107,56 @@ export async function handleCheckoutInput(text, cartItems) {
         const json = await res.json();
 
         if (json.invoice_url) {
-        const totalHarga = Object.values(cartItems).reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const itemList = Object.values(cartItems).map((item, i) => {
-        return `${i + 1}. ${item.name} x${item.qty} - Rp ${item.price * item.qty}`;
-        }).join('<br>');
+        setTimeout(() => {
+          // 🔔 Getar dan bunyi
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+          const sound = document.getElementById('notifSound');
+          sound?.play().catch(() => {});
 
-        respondWithTyping({
-        sender: 'lyra',
-        html: `
-            <div class="text-sm leading-relaxed">
-            <strong>🧾 Pesanan kamu:</strong><br>
-            ${itemList}<br><br>
-            <strong>💰 Total: Rp ${totalHarga.toLocaleString('id-ID')}</strong><br><br>
-            <a href="${json.invoice_url}" target="_blank" class=" mt-2 text-white px-4 py-2 hover:bg-blue-700 transition">
-                <h1>👉 Klik di sini untuk bayar via Xendit</h1>
-            </a>
+          const bubble = document.createElement('div');
+          bubble.className = `relative max-w-sm px-4 py-3 rounded-2xl bg-[#2c2e3e] text-white animate-bounce-in-slow shadow-lg`;
+                const totalHarga = Object.values(cartItems).reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const itemList = Object.values(cartItems).map((item, i) => {
+                return `${i + 1}. ${item.name} x${item.qty} - Rp ${item.price * item.qty}`;
+                }).join('<br>');
+
+          bubble.innerHTML = `
+            <div class="leading-relaxed text-sm">
+              <div class="mb-2">
+                <strong>🧾 Rincian Pesanan:</strong><br>
+                ${itemList}
+              </div>
+              <div class="mb-2">
+                <strong>Total:</strong> Rp ${totalHarga.toLocaleString('id-ID')}<br>
+                <span class="text-yellow-400 italic text-xs">*Belum termasuk ongkir</span>
+              </div>
+              <a href="${json.invoice_url}" target="_blank"
+                class="inline-block mt-2 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition">
+                💳 Lanjut Bayar via Xendit
+              </a>
             </div>
-        `
-        });
+          `;
+
+          const wrapper = document.createElement('div');
+          wrapper.className = 'flex flex-col self-start mb-2';
+          wrapper.appendChild(bubble);
+
+          document.getElementById('chatBox').appendChild(wrapper);
+          scrollToTop();
+
+        }, 800 + Math.random() * 400);
         } else {
         respondWithTyping({ sender: 'lyra', text: 'Xendit tidak memberikan tautan pembayaran 😥. Coba lagi ya.' });
         }
 
+        setTimeout(() => {
+          respondWithTyping({
+            sender: 'lyra',
+            text: modeLYRA === 'genz' 
+                  ? 'Cus klik tombolnya, biar langsung kita gas kirim sekarang! 🔥🚀' 
+                  : 'Silakan klik tombol bayar di atas untuk kita proses pengiriman secepatnya 🚚✨'
+          });
+        }, 1200); // biar keliatan natural
 
         checkoutStep = 0;
         checkoutData = {};
