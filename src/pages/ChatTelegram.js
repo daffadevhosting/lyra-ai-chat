@@ -276,7 +276,6 @@ async function sendWelcomeMessage(user) {
     // 🎭 Tambahkan efek fade dan remove
   [msg1, msg2].forEach((el, i) => {
     setTimeout(() => {
-      el.classList.add('opacity-0', 'transition-opacity', 'duration-1000');
       setTimeout(() => {
         el.remove();
       }, 1200);
