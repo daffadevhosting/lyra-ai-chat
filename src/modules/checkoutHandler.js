@@ -22,7 +22,8 @@ const auth = getAuth();
 const db = getFirestore(app);
 
 const user = auth.currentUser;
-const uid = user?.uid || 'guest'; // fallback guest
+const uid = user?.uid; // fallback guest
+localStorage.setItem('uid', uid); // disimpan
 
 let checkoutStep = 0;
 let checkoutData = {};
@@ -167,28 +168,27 @@ export async function handleCheckoutInput(text, cartItems) {
           
         }, 800 + Math.random() * 400);// Setelah kirim ke Xendit dan dapet json.invoice_url
           // ⏺ Simpan ke Firestore
-          await addDoc(collection(db, 'checkouts'), {
-            user: checkoutData,
-            cart: cartItems,
-            createdAt: serverTimestamp()
-          });
+        
+        const uid = localStorage.getItem('uid') || 'guest';
+        const orderId = `order_${Date.now()}`;
+        const orderRef = doc(db, "users", uid, "orders", orderId);
+        await setDoc(orderRef, {
+          user: checkoutData,
+          cart: cartItems,
+          order_id: orderId,
+          status: 'waiting',
+          createdAt: new Date()
+        });
         } else {
         respondWithTyping({ sender: 'lyra', text: 'Xendit tidak memberikan tautan pembayaran 😥. Coba lagi ya.' });
         }
           setTimeout(() => {
           respondWithTyping({
             sender: 'lyra',
-            text: 'Silakan klik tombol bayar di atas untuk kita proses pengiriman secepatnya 🚚✨'
+            text: 'Checkout berhasil! 🎉 Terima kasih sudah belanja. Silakan klik tombol bayar di atas untuk kita proses pengiriman secepatnya 🚚✨'
           });
         }, 1200); // biar keliatan natural
-        const orderRef = doc(collection(db, "users", uid, "orders"));
-        await setDoc(orderRef, {
-          user: checkoutData,
-          cart: cartItems,
-          createdAt: Date.now(),
-          status: 'waiting'
-        });
-
+        // Reset checkout state
         checkoutStep = 0;
         checkoutData = {};
         return true;
