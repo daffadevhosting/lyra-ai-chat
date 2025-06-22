@@ -41,7 +41,7 @@ function respondWithTyping({ text, product = null, voiceOnly = false, replyTo = 
 export function startCheckout(cart) {
   const uid = getCurrentUID(); // ambil UID saat fungsi dipanggil
 
-  if (!uid || uid === 'guest') {
+  if (!uid) {
     respondWithTyping({ 
       sender: 'lyra', 
       voiceOnly: true, 
@@ -54,7 +54,7 @@ export function startCheckout(cart) {
     respondWithTyping({ 
       sender: 'lyra', 
       voiceOnly: true, 
-      voice: 'Keranjang kamu masih kosong nih 😅 Tambah dulu yuk!' 
+      voice: 'Keranjang kamu masih kosong nih 😅 Tambah dulu yuk! ketik katalog untuk menampilkan semua produk.' 
     });
     return;
   }

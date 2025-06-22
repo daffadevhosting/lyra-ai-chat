@@ -22,12 +22,6 @@ function safeRenderHTML(rawHtml) {
   return wrapper.innerHTML;
 }
 
-if (voiceOnly && voice) {
-  // render voice bubble
-} else if (voiceOnly && !voice) {
-  bubble.textContent = '🔇 Voice kosong';
-}
-
 const bubble = document.createElement('div');
 const isWideContent = html && (html.includes('add-to-cart-btn') || html.includes('<div class="card">'));
 bubble.className = `
@@ -41,7 +35,12 @@ bubble.className = `
   if (sender === 'lyra') {
     bubble.classList.add('bubble-pop');
   }
-  if (html) {
+
+  if (voiceOnly && voice) {
+    // render voice bubble
+  } else if (voiceOnly && !voice) {
+    bubble.textContent = '🔇 Voice kosong';
+  } else if (html) {
     bubble.innerHTML = safeRenderHTML(html);
   } else if (text) {
     bubble.textContent = text;

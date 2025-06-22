@@ -541,7 +541,7 @@ export default function ChatTelegram() {
           respondWithTyping({
             sender: 'lyra',
             voiceOnly: true,
-            voice: `Keranjang nya kosong, nggak bisa checkout dulu 😅`,
+            voice: `Keranjang nya kosong, nggak bisa checkout dulu. 😅 Silahkan ketik katalog untuk menampilkan semua produk di toko kami.`,
           });
           showGlobalAlert('Keranjang kosong, nggak bisa checkout dulu 😅', 'error');
           return;
