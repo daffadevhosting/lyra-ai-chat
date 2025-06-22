@@ -21,6 +21,19 @@ function safeRenderHTML(rawHtml) {
 
   return wrapper.innerHTML;
 }
+
+function showTypingHeader(status = 'mengetik') {
+  const typing = document.getElementById('typingStatus');
+  if (!typing) return;
+  typing.textContent = status === 'voice' ? 'Lyra sedang merekam...' : 'Lyra sedang mengetik...';
+  typing.classList.remove('hidden');
+}
+
+function hideTypingHeader() {
+  const typing = document.getElementById('typingStatus');
+  if (typing) typing.classList.add('hidden');
+}
+
 const bubble = document.createElement('div');
 const isWideContent = html && (html.includes('add-to-cart-btn') || html.includes('<div class="card">'));
 bubble.className = `
@@ -55,6 +68,15 @@ bubble.className = `
     bubble.querySelector('.play-voice')?.addEventListener('click', () => {
       const utter = new SpeechSynthesisUtterance(voice);
       utter.lang = 'id-ID';
+
+      // 👉 Ganti status
+      const voiceNoteStatus = document.getElementById('voiceNoteStatus');
+      const lc = document.getElementById('lyraClock');
+      voiceNoteStatus.textContent = 'Lyra sedang berbicara...';
+      voiceNoteStatus.classList.remove('hidden');
+
+      utter.onend = () => voiceNoteStatus.classList.add('hidden');
+
       speechSynthesis.speak(utter);
     });
   }
@@ -137,20 +159,28 @@ export function removeTypingBubble() {
 
 export function showTypingHeader() {
   const el = document.getElementById('typingStatus');
+  const lc = document.getElementById('lyraClock');
   if (el) el.classList.remove('hidden');
+  if (lc) lc.classList.add('hidden');
 }
 
 export function hideTypingHeader() {
   const el = document.getElementById('typingStatus');
+  const lc = document.getElementById('lyraClock');
   if (el) el.classList.add('hidden');
+  if (lc) lc.classList.remove('hidden');
 }
 
 export function showVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
+  const lc = document.getElementById('lyraClock');
   if (vn) vn.classList.remove('hidden');
+  if (lc) lc.classList.add('hidden');
 }
 
 export function hideVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
+  const lc = document.getElementById('lyraClock');
   if (vn) vn.classList.add('hidden');
+  if (lc) lc.classList.remove('hidden');
 }

@@ -15,6 +15,7 @@ import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
 import { cartManager} from '../modules/CartManager.js';
 import { startCheckout, handleCheckoutInput } from '../modules/checkoutHandler.js';
 import { logout } from '../modules/authHandler.js';
+
 const MODES = ['jualan', 'friendly', 'formal', 'genz'];
 let modeLYRA = localStorage.getItem('modeLYRA') || 'jualan';
 let modeIndex = MODES.indexOf(modeLYRA);
@@ -212,7 +213,7 @@ function respondWithTyping({
   }
 
   showTypingBubble();
-  showTypingHeader();
+  showTypingHeader(voiceOnly ? 'voice' : 'mengetik');
 
   setTimeout(() => {
     if (voiceOnly && voice) {
@@ -227,7 +228,7 @@ function respondWithTyping({
       utter.lang = 'id-ID';
       speechSynthesis.speak(utter);
     } else {
-      appendMessage({ sender, text, product, replyTo, html, voiceOnly, speakOnly });
+      appendMessage({ sender, text, product, replyTo, html, voiceOnly, speakOnly, voice });
     }
 
     removeTypingBubble();
@@ -481,6 +482,18 @@ export default function ChatTelegram() {
       if (isGuest && chatCount >= LIMIT) return showLimitModal();
       if (isGuest) chatCount++;
 
+      const lower = text.toLowerCase();
+      const isTechQuery = /bisa\s(apa|ngapain)|kendali|iot|smarthome|otomatis|sistem|terhubung/.test(lower);
+
+      if (isTechQuery) {
+        respondWithTyping({
+          sender: 'lyra',
+          voice: 'Saya bisa segalanya... tinggal sambungkan saja saya ke sistem IoT kamu, nyalain mesin mobil, matikan lampu, atau sebaliknya, saya selalu siap, tapi saat ini saya sedang dalam proses pengembangan oleh kedua atasan saya. 🔌🤖',
+          voiceOnly: true
+        });
+        return;
+      }
+
       // 📦 Keranjang
       if (/keranjang|lihat keranjang|cart/i.test(text)) {
         cartBtn?.click();
@@ -588,6 +601,20 @@ export default function ChatTelegram() {
     });
 
 const cartBtn = document.getElementById('cartBtn');
+const typingStatus = document.getElementById('typingStatus');
+
+
+function setLyraStatus(text = '') {
+  const statusEl = document.getElementById('lyraClock');
+  if (statusEl) {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    statusEl.innerHTML = `<svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock3-icon lucide-clock-3"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16.5 12"/></svg> ${h}:${m} ${text}`;
+    statusEl.classList.remove('hidden');
+  }
+}
+setLyraStatus('sedang aktif memantau...');
 
 cartBtn?.addEventListener('click', () => {
   const { isEmpty, cartList, total } = cartManager.getCartSummary();
@@ -598,15 +625,18 @@ cartBtn?.addEventListener('click', () => {
     setTimeout(() => {
       showTypingBubble();
       showTypingHeader();
+      showVoiceNoteHeader();
 
       setTimeout(() => {
         appendMessage({ 
-          sender: 'lyra', 
-          text: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' 
+          sender: 'lyra',
+          voiceOnly: true,
+          voice: 'Keranjangmu masih kosong nih. Yuk pilih produk dulu!' 
         });
 
         removeTypingBubble();
         hideTypingHeader();
+        hideVoiceNoteHeader();
       }, 800 + Math.random() * 400);
     }, 10);
 
@@ -616,7 +646,7 @@ cartBtn?.addEventListener('click', () => {
   setTimeout(() => {
     showTypingBubble();
     showTypingHeader();
-    showVoiceNoteHeader
+    showVoiceNoteHeader();
 
     setTimeout(() => {
       appendMessage({
@@ -626,7 +656,7 @@ cartBtn?.addEventListener('click', () => {
 
       removeTypingBubble();
       hideTypingHeader();
-      hideVoiceNoteHeader
+      hideVoiceNoteHeader();
     }, 800 + Math.random() * 400);
   }, 10);
 });
@@ -838,7 +868,7 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
               <img src="./logo.png" class="w-8 h-8 rounded-full border border-purple-600" />
               <div>
                 <div class="font-semibold">L Y Я A</div>
-                <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
+                <div class="text-xs text-gray-400 opacity-80"><span id="lyraClock" class="flex justify-items-start items-center-safe">--:--</span> <span id="typingStatus" class="hidden">sedang mengetik...</span></div>
                 <div id="voiceNoteStatus" class="text-xs text-gray-400 hidden">sedang mengirim voice note...</div>
               </div>
             </div>
@@ -956,6 +986,10 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
             </div>
             <ul class="space-y-3 text-sm text-gray-100 list-inside max-h-[80vh] overflow-y-auto pr-3 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
               <li class="flex items-start gap-2">
+                <span class="mt-1 text-blue-400">⚙️</span>
+                <span><code class="text-yellow-300">Kamu bisa apa</code> – pamer keahlian</span>
+              </li>
+              <li class="flex items-start gap-2">
                 <span class="mt-1 text-blue-400">💬</span>
                 <span><code class="text-yellow-300">ada produk apa</code> – tampilkan semua produk</span>
               </li>
@@ -1045,10 +1079,4 @@ async function handleRequest(prompt) {
     chatBox.lastChild?.remove();
     appendMessage({ sender: 'lyra', text: '😵 LYRA lagi error. Coba lagi nanti ya.' });
   }
-}
-
-const textarea = document.getElementById('chatInput');
-if (textarea) {
-  textarea.setAttribute('style', 'height:' + (textarea.scrollHeight) + 'px;overflow-y:hidden;');
-  textarea.addEventListener('input', autoResize, false);
 }
