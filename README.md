@@ -78,12 +78,15 @@ Selamat berbelanja bareng L Y Я A! 💜
 - 🧠 Chat AI (terhubung ke Groq GPT API)
 - 💬 UI gaya Telegram dengan bubble reply yang real
 - 🛍️ Tampilkan produk otomatis berdasarkan keyword
-- 🔐 Login Google via Firebase Auth
+- 🔐 Login sistem + batasan akses
 - 🚫 Limitasi guest user (10 chat gratis)
-- 🪪 Modal login muncul otomatis saat kena limit
-- 🖼️ Produk tampil dalam bubble dengan gambar + tombol beli
-- 🖱️ Tombol kirim & login pakai icon lucide/heroicons
-- 🌓 Dark mode elegan
+- 💬 Notifikasi Order via telegram api
+- 🛒 Checkout terintegrasi Xendit
+- 🧠 Intent detection responsif
+- 🎙️ Voice note interaktif
+- 📦 Manajemen produk & keranjang smart
+- 🗂️ Multi-mode gaya bicara
+- 🚀 Rencana ke IoT. **(SOON)**
 
 ---
 
@@ -132,7 +135,7 @@ src/
 
  - Voice recognition (mic)
 
- - Text-to-speech (suara L Y Я A cewek)
+ - Text-to-speech (suara L Y Я A cewek) **(Done)**
 
  - Produk dari database **(Done)**
 
@@ -140,8 +143,47 @@ src/
 
  - Sistem payment via XENDit **(Done)**
 
+## 🔌 Koneksi Dunia Nyata
+ - IoT hooks (webhook ke ESP8266 misal)
+ - Integrasi voice + action (misal: “nyalain lampu dapur, nyalain mesin mobil / motor”)
 
- ## 💻 Demo
+ ## 🧠 Gimana caranya "Nyalain Mobil"?
+1. ### Sediakan microcontroller WiFi-ready:
+* ✅ ESP32 atau ESP8266 (harga murah, kuat)
+* Hubungkan ke modul relay atau sistem push-start (tergantung mobil)
+
+2. ### Cloud Webhook Endpoint:
+* Buat Worker/Cloud Function (misal: `/api/nyalain-mobil`)
+* Terima `command` via fetch dari LYRA, lalu kirim ke ESP
+
+3. ### ESP32 Listening Command:
+* ESP32 polling Firebase Realtime Database atau WebSocket
+* Begitu ada `command: "start_engine"` => trigger relay 1 detik
+
+**LYRA Script:**
+
+```lyra.config.js
+if (/nyalain mobil|panasin mesin/i.test(text)) {
+  respondWithVoice({
+    sender: 'lyra',
+    voiceOnly: false,
+    speakOnly: true,
+    voice: '🚗 Oke, aku sedang menyalakan mobil dan memanaskan mesinnya...'
+  });
+  
+  fetch('https://iot.lyra.workers.dev/autonomus', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'start_engine', token: 'secret123' })
+  });
+}
+```
+4. ### Tambahan Aman:
+
+- 🔐 Token khusus
+- 🌡️ Sensor suhu + timer (mobil ga dinyalain lebih dari 10 menit)
+- 📱 Notifikasi WA: "Mobil sudah menyala pukul 06.32, suhu mesin 25°C"
+
 
 |         - L Y Я A di hp -         |
 |--------------------------------|
