@@ -6,7 +6,9 @@ import {
   showTypingBubble,
   removeTypingBubble,
   showTypingHeader,
-  hideTypingHeader } from '../modules/chatRenderer.js';
+  hideTypingHeader,
+  showVoiceNoteHeader,
+  hideVoiceNoteHeader } from '../modules/chatRenderer.js';
 import { safeRenderHTML, attachProductModalTriggers } from '../modules//htmlRenderer.js';
 import { initAuth, getCurrentUID, onLoginStateChanged, login } from '../modules/authHandler.js';
 import { showLimitModal, hideLimitModal } from '../modules/limitModal.js';
@@ -214,16 +216,18 @@ function respondWithTyping({
 
   setTimeout(() => {
     if (voiceOnly && voice) {
+  showVoiceNoteHeader();
       appendMessage({
         sender,
         voiceOnly: true,
         voice
       });
+    hideVoiceNoteHeader();
       const utter = new SpeechSynthesisUtterance(voice);
       utter.lang = 'id-ID';
       speechSynthesis.speak(utter);
     } else {
-      appendMessage({ sender, text, product, replyTo, html });
+      appendMessage({ sender, text, product, replyTo, html, voiceOnly, speakOnly });
     }
 
     removeTypingBubble();
@@ -279,7 +283,7 @@ async function sendWelcomeMessage(user) {
     `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
   ];
   const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
-  respondWithTyping({ sender: 'lyra',  speakOnly: true, voice: `${randomText}` });
+  respondWithTyping({ sender: 'lyra',  voiceOnly: true,  speakOnly: false, voice: `${randomText}` });
   setTimeout(() => {
     const toggleStyleBtn = document.getElementById('toggleStyle');
     if (toggleStyleBtn) {
@@ -349,7 +353,7 @@ function renderProductGridInChat(products) {
 async function loadUserProfile() {
   const uid = getCurrentUID(); // pastikan fungsi ini tersedia dan benar
   if (!uid) {
-    respondWithTyping({ text: 'Kamu belum login 😅' });
+    respondWithTyping({ voiceOnly: true, voice: 'Kamu belum login 😅' });
     return;
   }
 
@@ -359,7 +363,7 @@ async function loadUserProfile() {
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
-      respondWithTyping({ text: 'Profil belum tersedia 😔' });
+      respondWithTyping({ voiceOnly: true, voice: 'Profil belum tersedia 😔' });
       return;
     }
 
@@ -511,7 +515,7 @@ export default function ChatTelegram() {
         return;
       }
       if (/profil|siapa aku|akun saya|user profile/i.test(text)) {
-        respondWithTyping({ sender: 'lyra', text: 'Tunggu sebentar, aku tampilkan profil kamu ya 😊' });
+        respondWithTyping({ sender: 'lyra', text: 'ini, aku tampilkan profil kamu 😊' });
         loadUserProfile();
         return;
       }
@@ -532,11 +536,11 @@ export default function ChatTelegram() {
       // 📦 Semua produk
       if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap|catalog/i.test(text)) {
           showTypingBubble();
-          showTypingHeader();
+          showVoiceNoteHeader();
           setTimeout(() => {
-            appendMessage({ sender: 'lyra', text: '📦 Ini semua produk dari toko aku:', replyTo: text });
+            appendMessage({ sender: 'lyra', voiceOnly: true, voice: 'Ini kak, semua produk yang ada di toko aku, klik tambah keranjang ya untuk berbelanja.', replyTo: text });
             removeTypingBubble();
-            hideTypingHeader();
+            hideVoiceNoteHeader();
           }, 600 + Math.random() * 400);
 
           setTimeout(() => {
@@ -612,6 +616,7 @@ cartBtn?.addEventListener('click', () => {
   setTimeout(() => {
     showTypingBubble();
     showTypingHeader();
+    showVoiceNoteHeader
 
     setTimeout(() => {
       appendMessage({
@@ -621,6 +626,7 @@ cartBtn?.addEventListener('click', () => {
 
       removeTypingBubble();
       hideTypingHeader();
+      hideVoiceNoteHeader
     }, 800 + Math.random() * 400);
   }, 10);
 });
@@ -833,6 +839,7 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
               <div>
                 <div class="font-semibold">L Y Я A</div>
                 <div id="typingStatus" class="text-xs text-gray-400 hidden">sedang mengetik...</div>
+                <div id="voiceNoteStatus" class="text-xs text-gray-400 hidden">sedang mengirim voice note...</div>
               </div>
             </div>
             <button id="cartBtn" class="relative cursor-pointer text-sm bg-transparent text-white px-3 py-3 rounded">
