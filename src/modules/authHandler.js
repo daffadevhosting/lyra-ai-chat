@@ -20,6 +20,7 @@ export function initAuth() {
   auth = getAuth(app);
   onAuthStateChanged(auth, (user) => {
   if (user) {
+  localStorage.setItem('uid', user.uid); // disimpan
     localStorage.setItem('user', JSON.stringify({
       uid: user.uid,
       displayName: user.displayName || '',

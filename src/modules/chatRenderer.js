@@ -22,16 +22,10 @@ function safeRenderHTML(rawHtml) {
   return wrapper.innerHTML;
 }
 
-function showTypingHeader(status = 'mengetik') {
-  const typing = document.getElementById('typingStatus');
-  if (!typing) return;
-  typing.textContent = status === 'voice' ? 'Lyra sedang merekam...' : 'Lyra sedang mengetik...';
-  typing.classList.remove('hidden');
-}
-
-function hideTypingHeader() {
-  const typing = document.getElementById('typingStatus');
-  if (typing) typing.classList.add('hidden');
+if (voiceOnly && voice) {
+  // render voice bubble
+} else if (voiceOnly && !voice) {
+  bubble.textContent = '🔇 Voice kosong';
 }
 
 const bubble = document.createElement('div');
@@ -74,6 +68,8 @@ bubble.className = `
       const lc = document.getElementById('lyraClock');
       voiceNoteStatus.textContent = 'Lyra sedang berbicara...';
       voiceNoteStatus.classList.remove('hidden');
+      navigator.vibrate?.(100);
+
 
       utter.onend = () => voiceNoteStatus.classList.add('hidden');
 
@@ -157,20 +153,6 @@ export function removeTypingBubble() {
   document.getElementById('typingBubble')?.remove();
 }
 
-export function showTypingHeader() {
-  const el = document.getElementById('typingStatus');
-  const lc = document.getElementById('lyraClock');
-  if (el) el.classList.remove('hidden');
-  if (lc) lc.classList.add('hidden');
-}
-
-export function hideTypingHeader() {
-  const el = document.getElementById('typingStatus');
-  const lc = document.getElementById('lyraClock');
-  if (el) el.classList.add('hidden');
-  if (lc) lc.classList.remove('hidden');
-}
-
 export function showVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
   const lc = document.getElementById('lyraClock');
@@ -182,5 +164,21 @@ export function hideVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
   const lc = document.getElementById('lyraClock');
   if (vn) vn.classList.add('hidden');
+  if (lc) lc.classList.remove('hidden');
+}
+
+export function showTypingHeader(status = 'mengetik') {
+  const typing = document.getElementById('typingStatus');
+  const lc = document.getElementById('lyraClock');
+  if (!typing) return;
+  typing.textContent = status === 'voice' ? 'Lyra sedang merekam...' : 'Lyra sedang mengetik...';
+  typing.classList.remove('hidden');
+  if (lc) lc.classList.add('hidden');
+}
+
+export function hideTypingHeader() {
+  const typing = document.getElementById('typingStatus');
+  const lc = document.getElementById('lyraClock');
+  if (typing) typing.classList.add('hidden');
   if (lc) lc.classList.remove('hidden');
 }

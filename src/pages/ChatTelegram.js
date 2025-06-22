@@ -309,7 +309,7 @@ function renderProductGridInChat(products) {
     <div class=\"w-full max-w-3xl md:max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 mx-auto animate-fade-in\">
       ${products.map(p => `
         <div class="bg-gray-700 border border-cyan-400 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
-          <img id="product-modal" src="${p.img}" alt="${p.name}" class="w-full h-52 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
+          <img src="${p.img}" alt="${p.name}" class="w-full h-40 md:h-52 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
           <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
@@ -354,7 +354,7 @@ function renderProductGridInChat(products) {
 async function loadUserProfile() {
   const uid = getCurrentUID(); // pastikan fungsi ini tersedia dan benar
   if (!uid) {
-    respondWithTyping({ voiceOnly: true, voice: 'Kamu belum login 😅' });
+    respondWithTyping({ voiceOnly: true, voice: 'Kamu belum login 😅 yuk login dulu supaya bisa berbelanja.' });
     return;
   }
 
@@ -486,11 +486,13 @@ export default function ChatTelegram() {
       const isTechQuery = /bisa\s(apa|ngapain)|kendali|iot|smarthome|otomatis|sistem|terhubung/.test(lower);
 
       if (isTechQuery) {
-        respondWithTyping({
-          sender: 'lyra',
-          voice: 'Saya bisa segalanya... tinggal sambungkan saja saya ke sistem IoT kamu, nyalain mesin mobil, matikan lampu, atau sebaliknya, saya selalu siap, tapi saat ini saya sedang dalam proses pengembangan oleh kedua atasan saya. 🔌🤖',
-          voiceOnly: true
-        });
+        setTimeout(() => {
+          respondWithTyping({
+            sender: 'lyra',
+            voice: 'Saya bisa segalanya... Jika kamu punya IoT, kamu tinggal sambungkan saja saya ke sistem IoT kamu, perintahkan saya untuk nyalain mesin mobil, matikan lampu, atau sebaliknya, saya selalu siap, tapi saat ini saya sedang dalam proses pengembangan oleh kedua atasan saya. 🔌🤖',
+            voiceOnly: true
+          });
+        }, 1200);
         return;
       }
 
@@ -538,7 +540,8 @@ export default function ChatTelegram() {
         if (isEmpty) {
           respondWithTyping({
             sender: 'lyra',
-            text: `Keranjang nya kosong, nggak bisa checkout dulu 😅`,
+            voiceOnly: true,
+            voice: `Keranjang nya kosong, nggak bisa checkout dulu 😅`,
           });
           showGlobalAlert('Keranjang kosong, nggak bisa checkout dulu 😅', 'error');
           return;
@@ -548,17 +551,17 @@ export default function ChatTelegram() {
 
       // 📦 Semua produk
       if (/produk apa|punya apa|katalog|jual apa|semua produk|lihat semua|katalog lengkap|catalog/i.test(text)) {
+          setTimeout(() => {
+            renderProductGridInChat(PRODUCT_LIST);
+          }, 400 + Math.random() * 200);
+
           showTypingBubble();
           showVoiceNoteHeader();
           setTimeout(() => {
-            appendMessage({ sender: 'lyra', voiceOnly: true, voice: 'Ini kak, semua produk yang ada di toko aku, klik tambah keranjang ya untuk berbelanja.', replyTo: text });
+            appendMessage({ sender: 'lyra', voiceOnly: true, voice: 'Ini kak, semua produk yang ada di toko aku, klik tombol tambah keranjang ya untuk berbelanja. dan ketik checkout jika sudah siap untuk membayar.', replyTo: text });
             removeTypingBubble();
             hideVoiceNoteHeader();
-          }, 600 + Math.random() * 400);
-
-          setTimeout(() => {
-            renderProductGridInChat(PRODUCT_LIST);
-          }, 1200 + Math.random() * 400);
+          }, 1200 + Math.random() * 600);
           return;
       }
 
@@ -778,17 +781,6 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
                   };
                 });
               }, 50);
-
-              setTimeout(() => {
-                document.querySelectorAll('open-product-image').forEach(link => {
-                  link.onclick = (e) => {
-                    e.preventDefault();
-                    const slug = link.dataset.slug;
-                    const product = PRODUCT_LIST.find(p => p.slug === slug);
-                    if (product) openProductModal(product);
-                  };
-                });
-              }, 100); // after DOM ready
               }, 800 + Math.random() * 400);
             }, 1000 + Math.random() * 500);
 
