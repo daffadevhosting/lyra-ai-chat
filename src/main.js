@@ -8,10 +8,14 @@ const app = document.querySelector('#app');
 
 const showUnderConstruction = () => {
   app.innerHTML = `
-    <div style="height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;background:#111;color:#fff;text-align:center;padding:2rem;">
-      <h1 style="font-size:2rem;">🚧 Website Sedang Dalam Perbaikan</h1>
-      <p style="margin-top:1rem;max-width:400px;">Kami sedang menyempurnakan sistem atau ada konfigurasi Firebase yang perlu diperbaiki. Silakan kembali beberapa saat lagi 🙏</p>
-    </div>
+      <div class="bg-gray-900 text-white font-sans h-screen flex flex-col items-center justify-center text-center px-6">
+        <h1 class="text-4xl font-bold text-yellow-400 mb-3">🚧 Sedang Dibangun!</h1>
+        <p class="mb-6 text-gray-300">Fitur ini belum siap tayang, tapi L Y Я A dan tim lagi ngebut ngerjainnya! 💪</p>
+        <a href="/" class="bg-yellow-500 px-4 py-2 rounded text-black hover:bg-yellow-600 transition">Balik ke Beranda</a>
+      </div>
+      <footer class="absolute bottom-0 w-full text-center text-gray-500 text-sm p-4">
+        <p>&copy; 2023 L Y Я A. All rights reserved.</p>
+      </footer>
   `;
 };
 
@@ -90,6 +94,35 @@ const routes = {
       }
     }
   },
+  '/success': () => {
+    import('./pages/success.js').then(module => {
+      const { successPage } = module;
+      app.innerHTML = '';
+      successPage();
+    }).catch(err => {
+      console.error('[Error loading success page]', err);
+      app.innerHTML = `<div class="bg-gray-900 text-red-500 font-sans h-screen flex flex-col items-center justify-center text-center px-6">🤖 AI response: Terjadi kesalahan saat memuat halaman sukses.</div>`;
+    });
+  },
+  '/404': () => {
+    app.innerHTML = `
+      <div class="text-center text-white p-10">
+        <h1 class="text-4xl font-bold">404 - Halaman Tidak Ditemukan</h1>
+        <p class="mt-4">Maaf, halaman yang Anda cari tidak ditemukan.</p>
+        <a href="/" class="text-blue-400 hover:underline mt-4 inline-block">Kembali ke Beranda</a>
+      </div>
+    `;
+  },
+  '/under-construction': showUnderConstruction,
+  '*': () => {
+    app.innerHTML = `
+      <div class="text-center px-6">
+        <h1 class="text-6xl font-bold text-purple-400 mb-4">404</h1>
+        <p class="text-lg mb-6">Yah, halaman yang kamu cari gak ada 😢</p>
+        <a href="/" class="bg-purple-600 px-4 py-2 rounded text-white hover:bg-purple-700 transition">Kembali ke Beranda</a>
+      </div>
+    `;
+  }
 };
 
 // 🚦 Jalankan route
