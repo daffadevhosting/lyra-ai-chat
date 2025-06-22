@@ -40,45 +40,85 @@ function respondWithTyping({ text, product = null, replyTo = null, html = null }
 
 export function startCheckout(cart) {
   if (!cart || cart.length === 0) {
-    respondWithTyping({ text: 'Keranjang kamu masih kosong nih 😅 Tambah dulu yuk!' });
+    respondWithTyping({ sender: 'lyra', text: 'Keranjang kamu masih kosong nih 😅 Tambah dulu yuk!' });
     return;
   }
 
-  respondWithTyping({
-    text: 'Sebelum checkout, aku butuh beberapa info ya. Siapa nama kamu?'
-  });
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const nama = user.displayName || 'kamu';
+  const mode = localStorage.getItem('modeLYRA') || 'default';
 
-  checkoutStep = 1;
-  checkoutData = {};
+  let greeting = '';
+
+  switch (mode) {
+    case 'jualan':
+      greeting = `Hai ${nama}, yuk isi data buat aku proses pesanan kamu. Siap? (ya/tidak) 😄`;
+      break;
+    case 'genz':
+      greeting = `Yo ${nama}, gas checkout sekarang yuk. Kamu ready? (ya/tidak) 😏`;
+      break;
+    case 'formal':
+      greeting = `Selamat datang, ${nama}. Apakah Anda siap melanjutkan proses checkout? (ya/tidak)`;
+      break;
+    default:
+      greeting = `Halo ${nama}, kita mulai proses checkout ya? Siap? (ya/tidak)`;
+  }
+
+  respondWithTyping({ sender: 'lyra', text: greeting });
+
+  // ⏳ Set mode menunggu konfirmasi
+  window.awaitingCheckoutConfirmation = true;
+
+  // Simpan nama kalau sudah ada
+  checkoutData = {
+    nama: nama !== 'kamu' ? nama : ''
+  };
 }
 
 export async function handleCheckoutInput(text, cartItems) {
+if (window.awaitingCheckoutConfirmation) {
+  if (/^(ya|siap|oke|yuk)$/i.test(text.trim())) {
+    checkoutStep = checkoutData.nama ? 2 : 1;
+    respondWithTyping({ sender: 'lyra', text: `Sip, nama kamu ${checkoutData.nama}. Sekarang, nomor WA aktif kamu dong?` });
+    window.awaitingCheckoutConfirmation = false;
+    return true;
+  } else if (/^(tidak|ga|engga|batal)$/i.test(text.trim())) {
+    respondWithTyping({ sender: 'lyra', text: 'Oke deh, kapan-kapan aja ya belanjanya 🙈' });
+    checkoutStep = 0;
+    checkoutData = {};
+    window.awaitingCheckoutConfirmation = false;
+    return true;
+  } else {
+    respondWithTyping({ sender: 'lyra', text: 'Jawabannya "ya" atau "tidak" dulu ya, biar aku tahu harus lanjut atau engga 😊' });
+    return true;
+  }
+}
   if (checkoutStep === 0) return false;
 
   if (checkoutStep === 1) {
     checkoutData.nama = text;
-    respondWithTyping({ text: `Sip, nama kamu ${text}. Sekarang, nomor WA aktif kamu dong?` });
+    respondWithTyping({ sender: 'lyra', text: `Sip, nama kamu ${text}. Sekarang, nomor WA aktif kamu dong?` });
     checkoutStep = 2;
     return true;
   }
 
   if (checkoutStep === 2) {
     checkoutData.no_wa = text;
-    respondWithTyping({ text: `Oke, sekarang alamat lengkap kamu ya?` });
+    respondWithTyping({ sender: 'lyra', text: `Oke, sekarang alamat lengkap kamu ya?` });
     checkoutStep = 3;
     return true;
   }
 
   if (checkoutStep === 3) {
     checkoutData.alamat = text;
-    respondWithTyping({ text: `Kurir yang kamu mau? (JNE, J&T, Sicepat, dll)` });
+    respondWithTyping({ sender: 'lyra', text: `Kurir yang kamu mau? (JNE, J&T, Sicepat, dll)` });
     checkoutStep = 4;
     return true;
   }
 
   if (checkoutStep === 4) {
     checkoutData.kurir = text;
-    respondWithTyping({ text: `Catatan tambahan sebelum checkout? Kalau nggak ada, ketik "-".` });
+    respondWithTyping({ sender: 'lyra', text: `Catatan tambahan sebelum checkout? Kalau nggak ada, ketik "-".` });
     checkoutStep = 5;
     return true;
   }

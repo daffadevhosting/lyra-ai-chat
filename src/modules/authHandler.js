@@ -19,8 +19,14 @@ export function initAuth() {
   const app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   onAuthStateChanged(auth, (user) => {
-  localStorage.setItem('uid', user.uid); // disimpan
+  if (user) {
+    localStorage.setItem('user', JSON.stringify({
+      uid: user.uid,
+      displayName: user.displayName || '',
+      email: user.email || ''
+    }));
     currentUser = user;
+  }
     if (typeof window._onLoginStateChanged === 'function') {
       window._onLoginStateChanged(user);
     }
