@@ -192,15 +192,40 @@ function updateCartBadge() {
   }
 }
 
-function respondWithTyping({ text, product = null, replyTo = null, html }) {
+function respondWithTyping({ 
+  sender = 'lyra', 
+  text = '', 
+  html = null, 
+  product = null, 
+  replyTo = null, 
+  voiceOnly = false, 
+  voice = '', 
+  speakOnly = false 
+}) {
+  if (speakOnly && voice) {
+    const utter = new SpeechSynthesisUtterance(voice);
+    utter.lang = 'id-ID';
+    speechSynthesis.speak(utter);
+    return;
+  }
+
   showTypingBubble();
   showTypingHeader();
+
   setTimeout(() => {
-    appendMessage({ sender: 'lyra', text, product, replyTo, html });
-    removeTypingBubble();
-    hideTypingHeader();
-  }, 1000 + Math.random() * 400);
-  setTimeout(() => {
+    if (voiceOnly && voice) {
+      appendMessage({
+        sender,
+        voiceOnly: true,
+        voice
+      });
+      const utter = new SpeechSynthesisUtterance(voice);
+      utter.lang = 'id-ID';
+      speechSynthesis.speak(utter);
+    } else {
+      appendMessage({ sender, text, product, replyTo, html });
+    }
+
     removeTypingBubble();
     hideTypingHeader();
   }, 1000 + Math.random() * 400);
@@ -254,7 +279,7 @@ async function sendWelcomeMessage(user) {
     `${greeting} ${name}! Yuk, mulai eksplor produk bareng aku. 🛍️`,
   ];
   const randomText = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
-  respondWithTyping({ sender: 'lyra', text: `${randomText}` });
+  respondWithTyping({ sender: 'lyra',  speakOnly: true, voice: `${randomText}` });
   setTimeout(() => {
     const toggleStyleBtn = document.getElementById('toggleStyle');
     if (toggleStyleBtn) {

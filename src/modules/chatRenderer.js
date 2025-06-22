@@ -1,4 +1,4 @@
-export function appendMessage({ sender, text, html, replyTo = null, product = null }) {
+export function appendMessage({ sender, voice, voiceOnly, text, html, replyTo = null, product = null }) {
   const chatBox = document.getElementById("chatBox");
   const div = document.createElement("div");
   div.className = `flex flex-col ${sender === 'user' ? 'items-end' : 'items-start'}`;
@@ -39,6 +39,21 @@ bubble.className = `
   } else if (text) {
     bubble.textContent = text;
   }
+  
+if (voiceOnly && voice) {
+  bubble.classList.add("voice-note");
+  bubble.innerHTML = `
+    <div class="flex items-center gap-3 text-sm text-gray-300">
+      <svg class="play-voice cursor-pointer h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-audio-lines-icon lucide-audio-lines"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>
+      <span class="italic">Lyra sedang bicara...</span>
+    </div>
+  `;
+  bubble.querySelector('.play-voice')?.addEventListener('click', () => {
+    const utter = new SpeechSynthesisUtterance(voice);
+    utter.lang = 'id-ID';
+    speechSynthesis.speak(utter);
+  });
+}
   
 bubble.classList.add('opacity-0');
 setTimeout(() => {
