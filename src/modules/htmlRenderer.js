@@ -18,7 +18,7 @@ export function safeRenderHTML(rawHtml) {
 
 export function attachProductModalTriggers(PRODUCT_LIST, openProductModal) {
   setTimeout(() => {
-    document.querySelectorAll('.open-product-link').forEach(link => {
+    document.querySelectorAll('.open-product-image').forEach(link => {
       link.onclick = (e) => {
         e.preventDefault();
         const slug = link.dataset.slug;

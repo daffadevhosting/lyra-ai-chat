@@ -1,6 +1,6 @@
 import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, increment, setDoc } from 'firebase/firestore';
 import { getAuth } from "firebase/auth";
-import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generatePersonaResponse, generateTone } from '../modules/intentHandler.js';
+import { detectIntentAndRespond, detectCategoryIntent, generateCategoryResponse, generatePersonaResponse, generateTone, getCustomIntents } from '../modules/intentHandler.js';
 import {
   appendMessage,
   showTypingBubble,
@@ -167,6 +167,8 @@ function generateProductTeaser(product) {
   return teasers[Math.floor(Math.random() * teasers.length)];
 }
 
+attachProductModalTriggers(PRODUCT_LIST, openProductModal);
+
 function openProductModal(product) {
   document.getElementById('modal-image').src = product.img || '/default.jpg';
   document.getElementById('modal-title').textContent = product.name;
@@ -309,7 +311,8 @@ function renderProductGridInChat(products) {
     <div class=\"w-full max-w-3xl md:max-w-4xl grid grid-cols-2 md:grid-cols-3 gap-3 mx-auto animate-fade-in\">
       ${products.map(p => `
         <div class="bg-gray-700 border border-cyan-400 rounded-lg p-2 text-white text-xs flex flex-col gap-1">
-          <img src="${p.img}" alt="${p.name}" class="w-full h-40 md:h-52 object-cover rounded cursor-pointer open-product-image" data-slug="${p.slug}" />
+        <a href="#" class="open-product-image text-blue-600 underline" data-slug="${p.slug}">
+          <img src="${p.img}" alt="${p.name}" class="w-full h-40 md:h-52 object-cover rounded cursor-pointer" /></a>
           <div class="font-semibold">${p.name}</div>
           <div class="text-yellow-300">Rp ${p.price.toLocaleString('id-ID')}</div>
           <button class="cursor-pointer mt-1 bg-blue-600 text-white text-xs py-1 rounded add-to-cart-btn" data-slug="${p.slug}">+ Keranjang</button>
