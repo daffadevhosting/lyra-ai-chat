@@ -71,6 +71,8 @@ L Y Я A adalah chatbot toko online pintar yang siap bantu kamu cari produk deng
 Selamat berbelanja bareng L Y Я A! 💜
 
 > Dibuat oleh nDang & Daffa, manusia nyeleneh dari Tasik.
+> Sorry... karena ini open source `code script di src/` acak-acakan. silahkan rapihkan dan kembangkan sesuai selera.
+> Untuk yang modulasi rapih + IoT ready di private 😅
 
 
 ## ✨ Fitur Utama
