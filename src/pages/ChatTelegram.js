@@ -476,6 +476,16 @@ export default function ChatTelegram() {
       const uid = getCurrentUID();
       const isGuest = !uid;
 
+      const customIntents = await getCustomIntents();
+      const match = customIntents.find(intent =>
+        intent.keywords.some(k => text.toLowerCase().includes(k.toLowerCase()))
+      );
+
+      if (match) {
+        respondWithTyping({ sender: 'lyra', text: match.response });
+        return;
+      }
+
       const handled = await handleCheckoutInput(text, cartManager.items);
       if (handled) return;
 

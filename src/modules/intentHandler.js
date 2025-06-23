@@ -11,6 +11,14 @@ export async function fetchProductList() {
   return PRODUCT_LIST;
 }
 
+export async function getCustomIntents() {
+  const db = getFirestore();
+  const snapshot = await getDocs(collection(db, "intents"));
+  const intents = [];
+  snapshot.forEach(doc => intents.push(doc.data()));
+  return intents;
+}
+
 export function detectIntentAndRespond(text) {
   const msg = text.toLowerCase();
 
