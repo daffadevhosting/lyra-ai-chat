@@ -67,9 +67,8 @@ function createProductCard(product) {
 
 function createVoiceBubble(voice) {
   const voiceBubble = document.createElement('div');
-  voiceBubble.className = `
-    flex items-center gap text-sm text-gray-300
-  `;
+  voiceBubble.classList.add("voice-note");
+  voiceBubble.className = `flex items-center gap text-sm text-gray-300`;
   voiceBubble.innerHTML = `
     <svg class="play-voice cursor-pointer h-4 w-14" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -88,8 +87,6 @@ function createVoiceBubble(voice) {
     </svg>
     <span class="italic flex">
       Lyra mengirim voice note...
-      <svg class="w-4 h-4 animate-pulse text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M3 12h2m2 0h2m2 0h2m2 0h2m2 0h2"/>
       </svg>
     </span>
   `;
