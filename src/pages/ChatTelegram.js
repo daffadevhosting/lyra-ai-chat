@@ -571,7 +571,7 @@ export default function ChatTelegram() {
           showTypingBubble();
           showVoiceNoteHeader();
           setTimeout(() => {
-            appendMessage({ sender: 'lyra', voiceOnly: true, voice: 'Ini kak, semua produk yang ada di toko aku, klik tombol tambah keranjang ya untuk berbelanja. dan ketik checkout jika sudah siap untuk membayar.', replyTo: text });
+            appendMessage({ sender: 'lyra', voiceOnly: true, voice: 'Ini kak, semua produk yang ada di toko aku, klik tombol tambah keranjang ya untuk berbelanja. dan ketik checkout jika sudah siap untuk membayar. Jangan lupa login dulu yaaa...', replyTo: text });
             removeTypingBubble();
             hideVoiceNoteHeader();
           }, 1200 + Math.random() * 600);
@@ -630,7 +630,7 @@ function setLyraStatus(text = '') {
     statusEl.classList.remove('hidden');
   }
 }
-setLyraStatus('sedang aktif memantau...');
+setLyraStatus('sedang aktif...');
 
 cartBtn?.addEventListener('click', () => {
   const { isEmpty, cartList, total } = cartManager.getCartSummary();
@@ -873,7 +873,7 @@ document.getElementById('modal-close')?.addEventListener('click', () => {
               <img src="./logo.png" class="w-8 h-8 rounded-full border border-purple-600" />
               <div>
                 <div class="font-semibold">L Y Я A</div>
-                <div class="text-xs text-gray-400 opacity-80"><span id="lyraClock" class="flex justify-items-start items-center-safe">--:--</span> <span id="typingStatus" class="hidden">sedang mengetik...</span></div>
+                <div id="clockStatus" class="text-xs text-gray-400 opacity-80"><span id="lyraClock" class="flex justify-items-start items-center-safe" class="hidden">--:--</span> <span id="typingStatus" class="hidden">sedang mengetik...</span></div>
                 <div id="voiceNoteStatus" class="text-xs text-gray-400 hidden">sedang mengirim voice note...</div>
               </div>
             </div>

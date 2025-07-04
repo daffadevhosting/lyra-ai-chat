@@ -167,7 +167,7 @@ if (/lanjut/i.test(text)) {
     const orderId = `order_${Date.now()}`; // 👉 kita generate orderId dulu
 
     // Kirim ke Worker/Xendit dengan orderId ini
-const res = await fetch('https://weathered-pond-49ef.cbp629tmm2.workers.dev/', {
+const res = await fetch('https://ketahuilah.harisudahmalam.workers.dev/', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ user: checkoutData, cart: cartItems, order_id: orderId })
@@ -268,7 +268,7 @@ console.log('Order berhasil disimpan ke Firestore.');
   }
 }
 
-    respondWithTyping({ text: 'Tolong ketik *lanjut* atau *ulang* ya!' });
+    respondWithTyping({ text: 'Tolong ketik _lanjut_ atau _ulang_ ya!' });
     return true;
   }
 

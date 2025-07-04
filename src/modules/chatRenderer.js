@@ -64,13 +64,17 @@ bubble.className = `
 
       // 👉 Ganti status
       const voiceNoteStatus = document.getElementById('voiceNoteStatus');
-      const lc = document.getElementById('lyraClock');
+      const lc = document.getElementById('clockStatus');
       voiceNoteStatus.textContent = 'Lyra sedang berbicara...';
       voiceNoteStatus.classList.remove('hidden');
+      lc.classList.add('hidden');
       navigator.vibrate?.(100);
 
 
-      utter.onend = () => voiceNoteStatus.classList.add('hidden');
+      utter.onend = () => {
+        voiceNoteStatus.classList.add('hidden');
+        lc.classList.remove('hidden');
+      }
 
       speechSynthesis.speak(utter);
     });
@@ -152,23 +156,25 @@ export function removeTypingBubble() {
   document.getElementById('typingBubble')?.remove();
 }
 
-export function showVoiceNoteHeader() {
+export function showVoiceNoteHeader(status = 'berbicara') {
   const vn = document.getElementById('voiceNoteStatus');
-  const lc = document.getElementById('lyraClock');
-  if (vn) vn.classList.remove('hidden');
-  if (lc) lc.classList.add('hidden');
+  const lc = document.getElementById('clockStatus');
+  if (!vn) return;
+  vn.textContent = status === 'voice' ? 'Lyra sedang berbicara...' : 'Lyra sedang merekam...';
+  vn.classList.remove('hidden');
+  lc.classList.add('hidden');
 }
 
 export function hideVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
-  const lc = document.getElementById('lyraClock');
+  const lc = document.getElementById('clockStatus');
   if (vn) vn.classList.add('hidden');
   if (lc) lc.classList.remove('hidden');
 }
 
 export function showTypingHeader(status = 'mengetik') {
   const typing = document.getElementById('typingStatus');
-  const lc = document.getElementById('lyraClock');
+  const lc = document.getElementById('clockStatus');
   if (!typing) return;
   typing.textContent = status === 'voice' ? 'Lyra sedang merekam...' : 'Lyra sedang mengetik...';
   typing.classList.remove('hidden');
@@ -177,7 +183,7 @@ export function showTypingHeader(status = 'mengetik') {
 
 export function hideTypingHeader() {
   const typing = document.getElementById('typingStatus');
-  const lc = document.getElementById('lyraClock');
+  const lc = document.getElementById('clockStatus');
   if (typing) typing.classList.add('hidden');
   if (lc) lc.classList.remove('hidden');
 }
