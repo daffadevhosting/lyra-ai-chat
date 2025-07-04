@@ -140,7 +140,7 @@ if (window.awaitingCheckoutConfirmation) {
   if (checkoutStep === 5) {
     checkoutData.catatan = text;
     respondWithTyping({
-      text: `Berikut datanya:\n\n📛 Nama: ${checkoutData.nama}\n📱 WA: ${checkoutData.no_wa}\n🏠 Alamat: ${checkoutData.alamat}\n🚚 Kurir: ${checkoutData.kurir}\n📝 Catatan: ${checkoutData.catatan}\n\nKetik *lanjut* untuk bayar atau *ulang* untuk edit.`
+      text: `Berikut datanya:\n\n📛 Nama: ${checkoutData.nama}\n📱 WA: ${checkoutData.no_wa}\n🏠 Alamat: ${checkoutData.alamat}\n🚚 Kurir: ${checkoutData.kurir}\n📝 Catatan: ${checkoutData.catatan}\n\nKetik _lanjut_ untuk bayar atau _ulang_ untuk edit.`
     });
     if (!checkoutData.nama || !checkoutData.no_wa || !checkoutData.alamat || !checkoutData.kurir) {
   respondWithTyping({ text: 'Data checkout belum lengkap, tolong isi dengan benar ya!' });

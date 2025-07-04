@@ -39,7 +39,7 @@ bubble.className = `
   if (voiceOnly && voice) {
     // render voice bubble
   } else if (voiceOnly && !voice) {
-    bubble.textContent = '🔇 Voice kosong';
+    bubble.textContent = '🚫 Kamu belum login! 🔐';
   } else if (html) {
     bubble.innerHTML = safeRenderHTML(html);
   } else if (text) {
@@ -158,32 +158,28 @@ export function removeTypingBubble() {
 
 export function showVoiceNoteHeader(status = 'berbicara') {
   const vn = document.getElementById('voiceNoteStatus');
-  const lc = document.getElementById('clockStatus');
   if (!vn) return;
-  vn.textContent = status === 'voice' ? 'Lyra sedang berbicara...' : 'Lyra sedang merekam...';
+  vn.textContent = status === 'voice' ? 'Lyra sedang berbicara...' : 'Lyra sedang mengetik...';
   vn.classList.remove('hidden');
-  lc.classList.add('hidden');
 }
 
 export function hideVoiceNoteHeader() {
   const vn = document.getElementById('voiceNoteStatus');
-  const lc = document.getElementById('clockStatus');
   if (vn) vn.classList.add('hidden');
-  if (lc) lc.classList.remove('hidden');
 }
 
 export function showTypingHeader(status = 'mengetik') {
   const typing = document.getElementById('typingStatus');
-  const lc = document.getElementById('clockStatus');
+  const clockStatus = document.getElementById('lyraClock');
   if (!typing) return;
   typing.textContent = status === 'voice' ? 'Lyra sedang merekam...' : 'Lyra sedang mengetik...';
   typing.classList.remove('hidden');
-  if (lc) lc.classList.add('hidden');
+  clockStatus.classList.add('hidden');
 }
 
 export function hideTypingHeader() {
   const typing = document.getElementById('typingStatus');
-  const lc = document.getElementById('clockStatus');
+  const clockStatus = document.getElementById('lyraClock');
   if (typing) typing.classList.add('hidden');
-  if (lc) lc.classList.remove('hidden');
+  if (clockStatus) clockStatus.classList.remove('hidden');
 }
